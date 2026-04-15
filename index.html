@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>배그 미션 시트지 사이트</title>
+    <style>
+        :root { --bg: #f8f9fa; --card-bg: #ffffff; --text: #212529; --primary: #ff4444; }
+        [data-theme='dark'] { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --primary: #ff4444; }
+
+        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; transition: 0.3s; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; text-align: center; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; }
+        .theme-toggle { cursor: pointer; padding: 10px 20px; border-radius: 20px; border: 1px solid var(--text); background: none; color: var(--text); }
+
+        h1 { font-size: 3rem; margin-bottom: 10px; }
+        p.subtitle { opacity: 0.7; margin-bottom: 40px; }
+
+        .mission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; }
+        .mission-card { 
+            background: var(--card-bg); border-radius: 20px; padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s;
+            border: 2px solid transparent; text-decoration: none; color: inherit; display: block;
+        }
+        .mission-card:hover { transform: translateY(-10px); border-color: var(--primary); }
+        .mission-card.locked { opacity: 0.5; cursor: default; }
+        .mission-card.locked:hover { transform: none; border-color: transparent; }
+
+        .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .m-title { font-size: 1.5rem; font-weight: bold; }
+
+        footer { margin-top: 100px; padding: 20px; opacity: 0.6; border-top: 1px solid rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div style="width: 80px;"></div>
+            <h1>🎯 배그 미션 시트지 사이트</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">테마 전환</button>
+        </header>
+
+        <p class="subtitle">다양한 배그 미션 시트들을 모아둔 사이트 입니다. 자유롭게 쓰셔도 됩니다.</p>
+
+        <div class="mission-grid">
+            <a href="bomb.html" class="mission-card">
+                <span class="icon">💣</span>
+                <span class="m-title">폭탄빙고</span>
+            </a>
+
+            <a href="land.html" class="mission-card">
+                <span class="icon">⛳</span>
+                <span class="m-title">땅따먹기</span>
+            </a>
+
+            <a href="gacha.html" class="mission-card">
+                <span class="icon">🎁</span>
+                <span class="m-title">가챠배그</span>
+            </a>
+
+            <div class="mission-card locked">
+                <span class="icon">🔒</span>
+                <span class="m-title">업데이트 예정</span>
+            </div>
+        </div>
+
+        <footer>Made by. 김쨔응</footer>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const body = document.documentElement;
+            const current = body.getAttribute('data-theme');
+            body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        }
+    </script>
+</body>
+</html>

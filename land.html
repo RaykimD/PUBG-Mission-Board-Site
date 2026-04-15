@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>땅따먹기 - 배그 미션</title>
+    <style>
+        :root { --bg: #f8f9fa; --text: #212529; --card: #ffffff; }
+        [data-theme='dark'] { --bg: #121212; --text: #e0e0e0; --card: #1e1e1e; }
+
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        /* 팀 선택 섹션 */
+        .team-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; padding: 15px; background: var(--card); border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .team-btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; opacity: 0.6; transition: 0.3s; }
+        .team-btn.active { opacity: 1; transform: scale(1.1); ring: 3px solid black; }
+        .t-red { background: #ff4d4d; } .t-blue { background: #4d94ff; }
+        .t-yellow { background: #ffdb4d; color: #333; } .t-green { background: #4dff88; color: #333; }
+
+        /* 스코어보드 */
+        .scoreboard { display: flex; height: 30px; border-radius: 15px; overflow: hidden; margin-bottom: 20px; background: #eee; }
+        .score-bar { transition: width 0.5s ease; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white; }
+
+        /* 그리드 */
+        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+        .card { aspect-ratio: 1/1; background: var(--card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); transition: 0.2s; }
+        
+        /* 점령 상태 색상 */
+        .captured { animation: capturePop 0.3s ease-out; border: none; color: white; font-weight: bold; }
+        @keyframes capturePop {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .cap-red { background: #ff4d4d !important; }
+        .cap-blue { background: #4d94ff !important; }
+        .cap-yellow { background: #ffdb4d !important; color: #333; }
+        .cap-green { background: #4dff88 !important; color: #333; }
+
+        .btn-action { margin-top: 20px; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; background: #666; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <a href="index.html" style="text-decoration:none; color:var(--text)">🏠 로비로</a>
+            <div id="roomDisplay" style="font-weight:bold; color:#ff4444;"></div>
+        </header>
+
+        <h3>🎨 팀을 선택하고 땅을 점령하세요!</h3>
+        
+        <div class="team-selector" id="teamSelector">
+            <button class="team-btn t-red" onclick="selectTeam('red')">빨강팀</button>
+            <button class="team-btn t-blue" onclick="selectTeam('blue')">파랑팀</button>
+            <button class="team-btn t-yellow" onclick="selectTeam('yellow')">노랑팀</button>
+            <button class="team-btn t-green" onclick="selectTeam('green')">초록팀</button>
+        </div>
+
+        <div class="scoreboard" id="scoreboard">
+            <div id="bar-red" class="score-bar t-red" style="width: 25%">0</div>
+            <div id="bar-blue" class="score-bar t-blue" style="width: 25%">0</div>
+            <div id="bar-yellow" class="score-bar t-yellow" style="width: 25%">0</div>
+            <div id="bar-green" class="score-bar t-green" style="width: 25%">0</div>
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+        <button class="btn-action" onclick="resetGame()">서버 초기화</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 🚨 여기에 실제 Firebase Config를 넣으세요!
+        const firebaseConfig = {
+  apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4",
+  authDomain: "pubg-mission-site.firebaseapp.com",
+  projectId: "pubg-mission-site",
+  storageBucket: "pubg-mission-site.firebasestorage.app",
+  messagingSenderId: "26055063441",
+  appId: "1:26055063441:web:f942888d592eb210924c30"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let roomId = urlParams.get('room');
+        if (!roomId) {
+            roomId = Math.floor(1000 + Math.random() * 9000).toString();
+            window.location.search = `?room=${roomId}`;
+        }
+        document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
+
+        const roomRef = doc(db, "land_rooms", roomId);
+        let myTeam = null;
+
+        window.selectTeam = (team) => {
+            myTeam = team;
+            document.querySelectorAll('.team-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.t-${team}`).classList.add('active');
+        };
+
+        const gridEl = document.getElementById('grid');
+        const cards = [];
+        for (let i = 1; i <= 100; i++) {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerText = i;
+            div.onclick = () => captureLand(i);
+            gridEl.appendChild(div);
+            cards[i] = div;
+        }
+
+        async function captureLand(num) {
+            if (!myTeam) { alert("팀을 먼저 선택해주세요!"); return; }
+            await updateDoc(roomRef, { [`card_${num}`]: myTeam });
+        }
+
+        onSnapshot(roomRef, (snapshot) => {
+            const data = snapshot.data() || {};
+            const scores = { red: 0, blue: 0, yellow: 0, green: 0 };
+
+            for (let i = 1; i <= 100; i++) {
+                const team = data[`card_${i}`];
+                if (team) {
+                    cards[i].className = `card captured cap-${team}`;
+                    cards[i].innerText = team.toUpperCase()[0];
+                    scores[team]++;
+                } else {
+                    cards[i].className = 'card';
+                    cards[i].innerText = i;
+                }
+            }
+            updateScoreboard(scores);
+        });
+
+        function updateScoreboard(scores) {
+            const total = Object.values(scores).reduce((a, b) => a + b, 0) || 1;
+            ['red', 'blue', 'yellow', 'green'].forEach(team => {
+                const percent = (scores[team] / total) * 100;
+                const bar = document.getElementById(`bar-${team}`);
+                bar.style.width = percent + "%";
+                bar.innerText = scores[team];
+            });
+        }
+
+        window.resetGame = async () => { if(confirm("초기화할까요?")) await setDoc(roomRef, {}); };
+    </script>
+</body>
+</html>
