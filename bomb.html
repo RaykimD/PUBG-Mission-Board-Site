@@ -4,74 +4,82 @@
     <meta charset="UTF-8">
     <title>폭탄빙고 - 배그 미션</title>
     <style>
-        :root { --bg: #f8f9fa; --card: #ffffff; --text: #212529; --bomb: #ff4444; }
-        [data-theme='dark'] { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --bomb: #ff6b6b; }
+        :root { --bg: #f8f9fa; --card: #ffffff; --text: #212529; --bomb: #ff4444; --btn: #444; }
+        [data-theme='dark'] { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --bomb: #ff6b6b; --btn: #333; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; }
-        .container { max-width: 600px; margin: 20px auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .room-tag { background: var(--bomb); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
-        .card { aspect-ratio: 1/1; background: var(--card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); transition: 0.2s; }
-        .card.exploded { background: var(--bomb) !important; color: white; border: none; animation: blast 0.4s ease-out forwards; }
-        @keyframes blast { 0% { transform: scale(1); } 50% { transform: scale(1.2); background: #ffaa00; } 100% { transform: scale(1); } }
-        .status-box { margin: 20px 0; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 10px; font-weight: bold; }
+        .container { max-width: 500px; margin: 10px auto; padding: 10px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .room-tag { background: var(--bomb); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+        .status-box { margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px; font-weight: bold; font-size: 14px; }
+        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+        .card { aspect-ratio: 1/1; background: var(--card); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); transition: 0.1s; }
+        .card.exploded { background: var(--bomb) !important; color: white; border: none; font-size: 14px; }
+        .action-btn { width: 100%; padding: 12px; margin-top: 20px; background: var(--bomb); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <a href="index.html" style="text-decoration:none; color:var(--text)">🏠 로비</a>
+            <a href="index.html" style="text-decoration:none; color:var(--text); font-size:14px;">🏠 로비</a>
             <div class="room-tag" id="roomDisplay">ROOM #----</div>
         </div>
-        <div class="status-box" id="countStatus">터진 칸: 0 | 남은 칸: 100</div>
+        <div class="status-box" id="countStatus">💥 터진 칸: 0 | 🧱 남은 칸: 100</div>
         <div class="grid" id="grid"></div>
-        <div style="margin-top:20px;">
-            <button onclick="location.reload()" style="padding:10px;">새로고침</button>
-            <button onclick="resetBoard()" style="padding:10px; background:#ff4444; color:white; border:none; border-radius:5px;">서버 초기화</button>
-        </div>
+        <button class="action-btn" onclick="resetBoard()">빙고 초기화</button>
     </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
         document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
         const urlParams = new URLSearchParams(window.location.search);
         let roomId = urlParams.get('room');
         if (!roomId) { roomId = Math.floor(1000 + Math.random() * 9000).toString(); window.location.search = `?room=${roomId}`; }
         document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
         const roomRef = doc(db, "bomb_rooms", roomId);
-        const gridEl = document.getElementById('grid');
-        const cards = [];
+        const gridEl = document.getElementById('grid'); const cards = [];
         for (let i = 1; i <= 100; i++) {
-            const div = document.createElement('div');
-            div.className = 'card'; div.innerText = i;
-            div.onclick = () => clickBomb(i);
-            gridEl.appendChild(div); cards[i] = div;
+            const div = document.createElement('div'); div.className = 'card'; div.innerText = i;
+            div.onclick = () => clickBomb(i); gridEl.appendChild(div); cards[i] = div;
         }
+
+        function getNeighbors(n) {
+            const res = [n];
+            if (n > 10) res.push(n - 10); if (n <= 90) res.push(n + 10);
+            if (n % 10 !== 1) res.push(n - 1); if (n % 10 !== 0) res.push(n + 1);
+            return res;
+        }
+
         async function clickBomb(num) {
-            const docSnap = await getDoc(roomRef);
-            if (!docSnap.exists()) { await setDoc(roomRef, {}); }
+            const docSnap = await getDoc(roomRef); if (!docSnap.exists()) await setDoc(roomRef, {});
             const data = docSnap.data() || {};
-            if (data[`card_${num}`]?.exploded) {
-                if (confirm(num + "번 칸을 복구할까요?")) { await updateDoc(roomRef, { [`card_${num}`]: deleteField() }); }
+            
+            if (data[`click_${num}`]) { // 클릭했던 칸을 다시 눌러 해제할 때
+                if (confirm(num + "번 폭탄을 해제하시겠습니까?")) {
+                    const updates = { [`click_${num}`]: deleteField() };
+                    await updateDoc(roomRef, updates);
+                }
                 return;
             }
-            const updates = {}; const targets = [num];
-            if (num > 10) targets.push(num - 10); if (num <= 90) targets.push(num + 10);
-            if (num % 10 !== 1) targets.push(num - 1); if (num % 10 !== 0) targets.push(num + 1);
-            targets.forEach(t => { updates[`card_${t}`] = { exploded: true }; });
-            await updateDoc(roomRef, updates);
+            await updateDoc(roomRef, { [`click_${num}`]: true });
         }
+
         onSnapshot(roomRef, (snapshot) => {
             const data = snapshot.data() || {};
+            const explodedSet = new Set();
+            Object.keys(data).forEach(key => {
+                if (key.startsWith('click_')) {
+                    const num = parseInt(key.split('_')[1]);
+                    getNeighbors(num).forEach(n => explodedSet.add(n));
+                }
+            });
             let count = 0;
             for (let i = 1; i <= 100; i++) {
-                if (data[`card_${i}`]?.exploded) { cards[i].classList.add('exploded'); cards[i].innerText = '💥'; count++; }
+                if (explodedSet.has(i)) { cards[i].classList.add('exploded'); cards[i].innerText = '💥'; count++; }
                 else { cards[i].classList.remove('exploded'); cards[i].innerText = i; }
             }
-            document.getElementById('countStatus').innerText = `터진 칸: ${count} | 남은 칸: ${100 - count}`;
+            document.getElementById('countStatus').innerText = `💥 터진 칸: ${count} | 🧱 남은 칸: ${100 - count}`;
         });
         window.resetBoard = async () => { if(confirm("초기화?")) await setDoc(roomRef, {}); };
     </script>
