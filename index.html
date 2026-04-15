@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>배그 킬보드 - 통합 제어 센터</title>
+  <meta charset="UTF-8">
+  <style>
+    /* 디자인: 게임 감성의 다크 모드 */
+    body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(10, 50px); gap: 5px; justify-content: center; margin-top: 20px; }
+    .card { width: 50px; height: 50px; background: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: 0.3s; perspective: 1000px; }
+    .card.revealed { background: #555; transform: rotateY(180deg); }
+    .legend { margin: 20px; padding: 10px; background: #222; border-radius: 8px; }
+    .btn-reset { padding: 10px 20px; background: #ff4444; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    /* 등급별 색상 */
+    .rank-normal { background: #f3f3f3 !important; color: black; }
+    .rank-rare { background: #3498db !important; }
+    .rank-epic { background: #9b59b6 !important; box-shadow: 0 0 15px #9b59b6; }
+    .rank-legend { background: #f1c40f !important; box-shadow: 0 0 20px #f1c40f; color: black; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>🏆 배틀그라운드 킬보드 (실시간)</h1>
+  <div id="status">연결 중...</div>
+  <div class="legend" id="score">획득 현황: -</div>
+  
+  <div class="grid" id="grid"></div>
+  <br>
+  <button class="btn-reset" onclick="resetGame()">전체 초기화</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // 🚨 본인의 Firebase 설정값으로 교체하세요!
+    const firebaseConfig = {
+  apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4",
+  authDomain: "pubg-mission-site.firebaseapp.com",
+  projectId: "pubg-mission-site",
+  storageBucket: "pubg-mission-site.firebasestorage.app",
+  messagingSenderId: "26055063441",
+  appId: "1:26055063441:web:f942888d592eb210924c30"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const roomRef = doc(db, "rooms", "pubg_game_1"); // 방 이름
+
+    // 1. 그리드 생성 및 데이터 감시
+    const gridEl = document.getElementById('grid');
+    const cards = [];
+
+    onSnapshot(roomRef, (doc) => {
+      const data = doc.data() || {};
+      document.getElementById('status').innerText = "실시간 연결됨 ✅";
+      updateUI(data);
+    });
+
+    function createBoard() {
+      for (let i = 1; i <= 100; i++) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerText = i;
+        div.onclick = () => clickCard(i);
+        gridEl.appendChild(div);
+        cards[i] = div;
+      }
+    }
+
+    // 2. 카드 클릭 시 (데이터 쓰기)
+    async function clickCard(num) {
+      const rand = Math.floor(Math.random() * 100) + 1;
+      let rank = 'normal';
+      if (rand > 98) rank = 'legend';
+      else if (rand > 90) rank = 'epic';
+      else if (rand > 70) rank = 'rare';
+
+      await updateDoc(roomRef, {
+        [`card_${num}`]: { revealed: true, rank: rank }
+      });
+    }
+
+    // 3. 화면 업데이트 (데이터 읽기)
+    function updateUI(data) {
+      for (let i = 1; i <= 100; i++) {
+        const cardData = data[`card_${i}`];
+        if (cardData && cardData.revealed) {
+          cards[i].classList.add('revealed');
+          cards[i].classList.add(`rank-${cardData.rank}`);
+          cards[i].innerText = cardData.rank === 'legend' ? '👑' : cardData.rank === 'epic' ? '🔮' : '🔹';
+        } else {
+          cards[i].className = 'card';
+          cards[i].innerText = i;
+        }
+      }
+    }
+
+    // 4. 초기화
+    window.resetGame = async () => {
+      if(confirm("게임을 초기화할까요?")) {
+        await setDoc(roomRef, {});
+      }
+    };
+
+    createBoard();
+  </script>
+</body>
+</html>
