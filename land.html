@@ -7,23 +7,26 @@
         :root { --bg: #f8f9fa; --text: #212529; --card: #ffffff; }
         [data-theme='dark'] { --bg: #121212; --text: #e0e0e0; --card: #1e1e1e; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; }
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .team-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        .team-btn { padding: 10px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; opacity: 0.5; }
-        .team-btn.active { opacity: 1; transform: scale(1.1); border: 2px solid white; }
+        .container { max-width: 450px; margin: 0 auto; padding: 10px; }
+        .team-selector { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; }
+        .team-btn { flex: 1; padding: 8px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; opacity: 0.4; font-size: 12px; }
+        .team-btn.active { opacity: 1; transform: scale(1.05); box-shadow: 0 0 10px rgba(0,0,0,0.2); }
         .t-red { background: #ff4d4d; } .t-blue { background: #4d94ff; }
         .t-yellow { background: #ffdb4d; color: black; } .t-green { background: #4dff88; color: black; }
-        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
-        .card { aspect-ratio: 1/1; background: var(--card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
-        .cap-red { background: #ff4d4d !important; color: white; }
-        .cap-blue { background: #4d94ff !important; color: white; }
-        .cap-yellow { background: #ffdb4d !important; color: black; }
-        .cap-green { background: #4dff88 !important; color: black; }
+        .scoreboard { display: flex; height: 25px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: #eee; }
+        .score-bar { transition: width 0.4s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: white; overflow: hidden; }
+        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+        .card { aspect-ratio: 1/1; background: var(--card); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
+        .cap-red { background: #ff4d4d !important; color: white; border: none; }
+        .cap-blue { background: #4d94ff !important; color: white; border: none; }
+        .cap-yellow { background: #ffdb4d !important; color: black; border: none; }
+        .cap-green { background: #4dff88 !important; color: black; border: none; }
+        .action-btn { width: 100%; padding: 12px; margin-top: 20px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header style="display:flex; justify-content:space-between; margin-bottom:20px;">
+        <header style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:13px;">
             <a href="index.html" style="text-decoration:none; color:var(--text)">🏠 로비</a>
             <div id="roomDisplay" style="font-weight:bold; color:#ff4444;"></div>
         </header>
@@ -33,15 +36,20 @@
             <button class="team-btn t-yellow" onclick="selectTeam('yellow')">노랑</button>
             <button class="team-btn t-green" onclick="selectTeam('green')">초록</button>
         </div>
+        <div class="scoreboard" id="scoreboard">
+            <div id="bar-red" class="score-bar t-red" style="width: 25%">0</div>
+            <div id="bar-blue" class="score-bar t-blue" style="width: 25%">0</div>
+            <div id="bar-yellow" class="score-bar t-yellow" style="width: 25%">0</div>
+            <div id="bar-green" class="score-bar t-green" style="width: 25%">0</div>
+        </div>
         <div class="grid" id="grid"></div>
-        <button onclick="resetGame()" style="margin-top:20px;">서버 초기화</button>
+        <button class="action-btn" onclick="resetGame()">땅따먹기 초기화</button>
     </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
         document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
         const urlParams = new URLSearchParams(window.location.search);
         let roomId = urlParams.get('room');
@@ -56,18 +64,23 @@
             div.onclick = () => captureLand(i); gridEl.appendChild(div); cards[i] = div;
         }
         async function captureLand(n) {
-            if (!myTeam) return alert("팀 선택!");
-            const docSnap = await getDoc(roomRef);
-            if (!docSnap.exists()) await setDoc(roomRef, {});
+            if (!myTeam) return alert("팀을 선택해주세요!");
+            const docSnap = await getDoc(roomRef); if (!docSnap.exists()) await setDoc(roomRef, {});
             await updateDoc(roomRef, { [`card_${n}`]: myTeam });
         }
         onSnapshot(roomRef, (snapshot) => {
             const data = snapshot.data() || {};
+            const scores = { red: 0, blue: 0, yellow: 0, green: 0 };
             for (let i = 1; i <= 100; i++) {
                 const team = data[`card_${i}`];
-                if (team) { cards[i].className = `card cap-${team}`; cards[i].innerText = team[0].toUpperCase(); }
+                if (team) { cards[i].className = `card cap-${team}`; cards[i].innerText = team[0].toUpperCase(); scores[team]++; }
                 else { cards[i].className = 'card'; cards[i].innerText = i; }
             }
+            const total = Object.values(scores).reduce((a,b)=>a+b, 0) || 1;
+            ['red','blue','yellow','green'].forEach(t => {
+                const p = (scores[t]/total)*100; const bar = document.getElementById(`bar-${t}`);
+                bar.style.width = p+"%"; bar.innerText = scores[t];
+            });
         });
         window.resetGame = async () => { if(confirm("초기화?")) await setDoc(roomRef, {}); };
     </script>
