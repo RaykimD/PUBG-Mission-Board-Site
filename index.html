@@ -1,161 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>배그 킬보드 센터</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>배그 미션 시트지 사이트</title>
     <style>
-        body { background: #121212; color: white; font-family: 'Malgun Gothic', sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .header { background: #1f1f1f; padding: 15px; border-radius: 10px; border-bottom: 3px solid #ff4444; margin-bottom: 20px; }
-        .room-badge { background: #ff4444; padding: 5px 10px; border-radius: 20px; font-size: 14px; font-weight: bold; }
-        
-        /* 게임 모드 선택 */
-        .mode-container { margin-bottom: 20px; }
-        .mode-btn { padding: 10px 15px; margin: 5px; cursor: pointer; background: #333; border: 1px solid #555; color: white; border-radius: 5px; }
-        .mode-btn.active { background: #ff4444; border-color: #ff4444; }
+        :root { --bg: #f8f9fa; --card-bg: #ffffff; --text: #212529; --primary: #ff4444; }
+        [data-theme='dark'] { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --primary: #ff4444; }
 
-        /* 그리드 설정 */
-        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; max-width: 600px; margin: 0 auto; }
-        .card { aspect-ratio: 1/1; background: #2a2a2a; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; border: 1px solid #3a3a3a; transition: 0.1s; }
-        .card:hover { border-color: #ff4444; background: #333; }
+        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; transition: 0.3s; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; text-align: center; }
         
-        /* 등급/효과 색상 */
-        .revealed { color: white; font-weight: bold; }
-        .rank-normal { background: #f0f0f0 !important; color: #333; }
-        .rank-rare { background: #3498db !important; }
-        .rank-epic { background: #9b59b6 !important; box-shadow: 0 0 10px #9b59b6; }
-        .rank-legend { background: #f1c40f !important; box-shadow: 0 0 15px #f1c40f; color: black; }
-        .rank-bomb { background: #444 !important; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; }
+        .theme-toggle { cursor: pointer; padding: 10px 20px; border-radius: 20px; border: 1px solid var(--text); background: none; color: var(--text); }
 
-        .controls { margin-top: 30px; }
-        button.action-btn { padding: 12px 25px; margin: 5px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .reset-btn { background: #e74c3c; color: white; }
-        .copy-btn { background: #27ae60; color: white; }
+        h1 { font-size: 3rem; margin-bottom: 10px; }
+        p.subtitle { opacity: 0.7; margin-bottom: 40px; }
+
+        .mission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; }
+        .mission-card { 
+            background: var(--card-bg); border-radius: 20px; padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s;
+            border: 2px solid transparent; text-decoration: none; color: inherit; display: block;
+        }
+        .mission-card:hover { transform: translateY(-10px); border-color: var(--primary); }
+        .mission-card.locked { opacity: 0.5; cursor: default; }
+        .mission-card.locked:hover { transform: none; border-color: transparent; }
+
+        .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .m-title { font-size: 1.5rem; font-weight: bold; }
+
+        footer { margin-top: 100px; padding: 20px; opacity: 0.6; border-top: 1px solid rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <div style="width: 80px;"></div>
+            <h1>🎯 배그 미션 시트지 사이트</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">테마 전환</button>
+        </header>
 
-<div class="header">
-    <span class="room-badge" id="roomDisplay">접속 중...</span>
-    <h2>🎮 배그 미션 킬보드</h2>
-</div>
+        <p class="subtitle">배틀그라운드 익명 시스템을 이용한 나만의 미션 킬보드</p>
 
-<div class="mode-container" id="modeSelector">
-    <button class="mode-btn active" onclick="changeMode('gacha')">🎁 가챠 모드</button>
-    <button class="mode-btn" onclick="changeMode('bomb')">💣 폭탄빙고</button>
-</div>
+        <div class="mission-grid">
+            <a href="bomb.html" class="mission-card">
+                <span class="icon">💣</span>
+                <span class="m-title">폭탄빙고</span>
+            </a>
 
-<div class="grid" id="grid"></div>
+            <a href="land.html" class="mission-card">
+                <span class="icon">⛳</span>
+                <span class="m-title">땅따먹기</span>
+            </a>
 
-<div class="controls">
-    <button class="action-btn reset-btn" onclick="resetGame()">서버 초기화</button>
-    <button class="action-btn copy-btn" onclick="copyRoomLink()">초대 링크 복사</button>
-</div>
+            <a href="gacha.html" class="mission-card">
+                <span class="icon">🎁</span>
+                <span class="m-title">가챠배그</span>
+            </a>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+            <div class="mission-card locked">
+                <span class="icon">🔒</span>
+                <span class="m-title">업데이트 예정</span>
+            </div>
+        </div>
 
-    // 🚨 본인의 Firebase 설정값을 여기에 다시 넣으세요!
-    const firebaseConfig = {
-  apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4",
-  authDomain: "pubg-mission-site.firebaseapp.com",
-  projectId: "pubg-mission-site",
-  storageBucket: "pubg-mission-site.firebasestorage.app",
-  messagingSenderId: "26055063441",
-  appId: "1:26055063441:web:f942888d592eb210924c30"
-};
+        <footer>Made by. 김쨔응</footer>
+    </div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // 🔗 [핵심] URL에서 방 번호(room)와 모드(mode) 가져오기
-    const urlParams = new URLSearchParams(window.location.search);
-    let roomId = urlParams.get('room');
-    let currentMode = urlParams.get('mode') || 'gacha';
-
-    // 방 번호가 없으면 랜덤 생성 후 이동
-    if (!roomId) {
-        roomId = Math.floor(1000 + Math.random() * 9000).toString();
-        window.location.search = `?room=${roomId}&mode=${currentMode}`;
-    }
-
-    document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
-    
-    // 📂 방 번호에 맞는 Firestore 문서 연결 (이 줄이 방을 갈라줍니다!)
-    const roomRef = doc(db, "rooms", roomId); 
-
-    const gridEl = document.getElementById('grid');
-    const cards = [];
-
-    // 그리드 초기 생성
-    function initGrid() {
-        gridEl.innerHTML = '';
-        for (let i = 1; i <= 100; i++) {
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerText = i;
-            div.onclick = () => handleCardClick(i);
-            gridEl.appendChild(div);
-            cards[i] = div;
+    <script>
+        function toggleTheme() {
+            const body = document.documentElement;
+            const current = body.getAttribute('data-theme');
+            body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
         }
-    }
-
-    // 🖱️ 클릭 로직
-    async function handleCardClick(num) {
-        const docSnap = await getDoc(roomRef);
-        const data = docSnap.data() || {};
-        
-        // 이미 클릭된 칸은 무시
-        if (data[`card_${num}`]) return;
-
-        let updateData = {};
-        
-        if (currentMode === 'gacha') {
-            const rand = Math.floor(Math.random() * 100) + 1;
-            let res = { rank: 'normal', icon: '⚪' };
-            if (rand > 98) res = { rank: 'legend', icon: '👑' };
-            else if (rand > 90) res = { rank: 'epic', icon: '🔮' };
-            else if (rand > 70) res = { rank: 'rare', icon: '🔹' };
-            updateData[`card_${num}`] = { revealed: true, ...res };
-        } else {
-            // 폭탄 모드 (단순 체크)
-            updateData[`card_${num}`] = { revealed: true, rank: 'bomb', icon: '💣' };
-        }
-
-        await updateDoc(roomRef, updateData);
-    }
-
-    // 📺 실시간 화면 업데이트
-    onSnapshot(roomRef, (snapshot) => {
-        const data = snapshot.data() || {};
-        for (let i = 1; i <= 100; i++) {
-            const c = data[`card_${i}`];
-            if (c && c.revealed) {
-                cards[i].className = `card revealed rank-${c.rank}`;
-                cards[i].innerText = c.icon;
-            } else {
-                cards[i].className = 'card';
-                cards[i].innerText = i;
-            }
-        }
-    });
-
-    // 기타 기능들
-    window.resetGame = async () => {
-        if (confirm("이 방의 모든 데이터를 초기화할까요?")) await setDoc(roomRef, {});
-    };
-
-    window.copyRoomLink = () => {
-        navigator.clipboard.writeText(window.location.href);
-        alert("초대 링크가 복사되었습니다!");
-    };
-
-    window.changeMode = (mode) => {
-        window.location.search = `?room=${roomId}&mode=${mode}`;
-    };
-
-    initGrid();
-</script>
+    </script>
 </body>
 </html>
