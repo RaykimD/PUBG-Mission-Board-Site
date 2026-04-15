@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>가챠배그 - 배그 미션</title>
+    <style>
+        :root { --bg: #f8f9fa; --text: #212529; }
+        [data-theme='dark'] { --bg: #121212; --text: #e0e0e0; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; }
+        .container { display: flex; max-width: 1200px; margin: 0 auto; padding: 20px; gap: 20px; }
+        .main-game { flex: 3; }
+        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; perspective: 1000px; }
+        .card-container { aspect-ratio: 1/1; cursor: pointer; transform-style: preserve-3d; transition: transform 0.6s; position: relative; }
+        .card-container.is-flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid rgba(0,0,0,0.2); }
+        .card-front { background: #2c3e50; color: white; }
+        .card-back { transform: rotateY(180deg); color: white; }
+        .rank-normal { background: #95a5a6; }
+        .rank-rare { background: #3498db; }
+        .rank-epic { background: #9b59b6; box-shadow: 0 0 15px #9b59b6; }
+        .rank-legend { background: #f1c40f; box-shadow: 0 0 20px #f1c40f; color: black; }
+        .log-box { height: 300px; background: rgba(0,0,0,0.1); border-radius: 10px; padding: 10px; overflow-y: auto; text-align: left; font-size: 12px; }
+        .log-entry { padding: 3px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .counts { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; text-align: left; font-size: 14px; }
+        #effectOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 100; font-size: 6rem; font-weight: 900; opacity: 0; transition: 0.5s; }
+        @keyframes shake { 0% { transform: translate(0,0); } 10% { transform: translate(-10px,10px); } 20% { transform: translate(10px,-10px); } 100% { transform: translate(0,0); } }
+        .shake { animation: shake 0.5s; }
+    </style>
+</head>
+<body>
+    <div id="effectOverlay"></div>
+    <div class="container">
+        <div class="main-game">
+            <header style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <a href="index.html" style="text-decoration:none; color:var(--text)">🏠 로비</a>
+                <div id="roomDisplay" style="font-weight:bold;"></div>
+            </header>
+            <div class="grid" id="grid"></div>
+        </div>
+        <div class="side-panel">
+            <div class="counts" id="countDisplay">
+                ⚪ 일반: 60 | 🔹 레어: 30<br>🔮 에픽: 8 | 👑 전설: 2
+            </div>
+            <div class="log-box" id="logBox"><strong>📜 실시간 로그</strong><hr></div>
+            <button onclick="resetGame()" style="background:#ff4444; color:white; border:none; padding:10px; border-radius:5px;">초기화</button>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+        const urlParams = new URLSearchParams(window.location.search);
+        let roomId = urlParams.get('room');
+        if (!roomId) { roomId = Math.floor(1000 + Math.random() * 9000).toString(); window.location.search = `?room=${roomId}`; }
+        document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
+        const roomRef = doc(db, "gacha_rooms", roomId);
+        const gridEl = document.getElementById('grid'); const cards = [];
+        for (let i = 1; i <= 100; i++) {
+            const con = document.createElement('div'); con.className = 'card-container';
+            con.innerHTML = `<div class="card-face card-front">${i}</div><div class="card-face card-back">?</div>`;
+            con.onclick = () => flip(i); gridEl.appendChild(con); cards[i] = con;
+        }
+        async function flip(n) {
+            const docSnap = await getDoc(roomRef);
+            if (!docSnap.exists()) await setDoc(roomRef, { logs: [] });
+            const data = docSnap.data() || {};
+            if (data[`card_${n}`]) return;
+            const rand = Math.floor(Math.random() * 100) + 1;
+            let res = { rank: 'normal', icon: '⚪', name: '일반' };
+            if (rand > 98) res = { rank: 'legend', icon: '👑', name: '전설' };
+            else if (rand > 90) res = { rank: 'epic', icon: '🔮', name: '에픽' };
+            else if (rand > 60) res = { rank: 'rare', icon: '🔹', name: '레어' };
+            await updateDoc(roomRef, { [`card_${n}`]: res, logs: arrayUnion(`[${n}번] ${res.icon} ${res.name} 등장!`) });
+        }
+        onSnapshot(roomRef, (snap) => {
+            const data = snap.data() || {};
+            const counts = { normal: 60, rare: 30, epic: 8, legend: 2 };
+            const logBox = document.getElementById('logBox');
+            logBox.innerHTML = '<strong>📜 실시간 로그</strong><hr>';
+            (data.logs || []).slice().reverse().forEach(l => {
+                const item = document.createElement('div'); item.className = 'log-entry';
+                if(l.includes('전설')) item.style.color = '#f1c40f';
+                if(l.includes('에픽')) item.style.color = '#9b59b6';
+                item.innerText = l; logBox.appendChild(item);
+            });
+            for (let i = 1; i <= 100; i++) {
+                const c = data[`card_${i}`];
+                if (c) {
+                    if (!cards[i].classList.contains('is-flipped')) { triggerEffect(c.rank); }
+                    cards[i].classList.add('is-flipped');
+                    const back = cards[i].querySelector('.card-back');
+                    back.className = `card-face card-back rank-${c.rank}`; back.innerText = c.icon;
+                    counts[c.rank]--;
+                } else { cards[i].classList.remove('is-flipped'); }
+            }
+            document.getElementById('countDisplay').innerHTML = `⚪ 일반: ${counts.normal} | 🔹 레어: ${counts.rare}<br>🔮 에픽: ${counts.epic} | 👑 전설: ${counts.legend}`;
+        });
+        function triggerEffect(rank) {
+            const overlay = document.getElementById('effectOverlay');
+            if (rank === 'legend') { overlay.innerText = "LEGENDARY!!"; overlay.style.color = "#f1c40f"; overlay.style.background = "radial-gradient(circle, rgba(241,196,15,0.4) 0%, transparent 70%)"; }
+            else if (rank === 'epic') { overlay.innerText = "EPIC!"; overlay.style.color = "#9b59b6"; overlay.style.background = "radial-gradient(circle, rgba(155,89,182,0.4) 0%, transparent 70%)"; }
+            else return;
+            overlay.style.opacity = "1"; document.body.classList.add('shake');
+            setTimeout(() => { overlay.style.opacity = "0"; document.body.classList.remove('shake'); }, 1500);
+        }
+        window.resetGame = async () => { if(confirm("초기화?")) await setDoc(roomRef, { logs: [] }); };
+    </script>
+</body>
+</html>
