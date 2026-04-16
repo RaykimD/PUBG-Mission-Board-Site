@@ -10,7 +10,6 @@
             --accent: #4d94ff;
             --border: #444;
         }
-        /* 다크모드 색상 완벽 대응 */
         [data-theme='dark'] { 
             --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; 
             --p1: #8c4444; --p2: #8c6a44; --p3: #448c5a; --p4: #447a8c;
@@ -24,9 +23,7 @@
         .fixed-dashboard { position: sticky; top: 15px; width: 280px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
         .viewer-card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); }
         
-        .room-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; }
-        .room-tag { background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-
+        .header-title { font-weight: bold; color: #888; font-size: 11px; letter-spacing: 1px; margin-bottom: 5px; }
         .main-score { font-size: 34px; font-weight: 900; color: var(--accent); margin: 10px 0; }
         
         .player-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-weight: bold; border: 1px solid #bbb; color: #333; }
@@ -43,22 +40,27 @@
         th, td { border: 1px solid var(--border); padding: 8px; text-align: center; }
         th { background: rgba(128,128,128,0.1); font-size: 11px; color: var(--text); font-weight: bold; }
 
-        input[type="number"], input[type="text"] { width: 90%; border: 1px solid #aaa; border-radius: 3px; padding: 5px 0; text-align: center; background: transparent; color: inherit; }
-        
+        input[type="number"], input[type="text"] { width: 90%; border: 1px solid #aaa; border-radius: 3px; padding: 5px 0; text-align: center; background: transparent; color: inherit; font-weight: bold; }
+        input:focus { outline: none; background: rgba(255,255,255,0.2); }
+
         .bg-p1 { background-color: var(--p1) !important; } .bg-p2 { background-color: var(--p2) !important; }
         .bg-p3 { background-color: var(--p3) !important; } .bg-p4 { background-color: var(--p4) !important; }
         
         /* 맵별 고유 색상 */
-        .map-cell { font-weight: bold; }
-        .map-erangel { color: #2e7d32; } .map-miramar { color: #d84315; }
-        .map-sanhok { color: #00695c; } .map-taego { color: #1565c0; }
+        .map-cell { font-weight: bold; transition: background 0.3s; }
+        .map-erangel { background-color: #e8f5e9 !important; color: #2e7d32 !important; }
+        .map-miramar { background-color: #fff3e0 !important; color: #d84315 !important; }
+        .map-sanhok { background-color: #e0f2f1 !important; color: #00695c !important; }
+        .map-taego { background-color: #e3f2fd !important; color: #1565c0 !important; }
+        .map-vikendi { background-color: #eceff1 !important; color: #455a64 !important; }
+        .map-rondo { background-color: #f3e5f5 !important; color: #6a1b9a !important; }
 
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; margin-bottom: 5px; transition: 0.2s; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; margin-bottom: 5px; transition: 0.2s; border: 2px solid var(--border); }
         .btn-copy { background: #27ae60; color: white; }
         .btn-lobby { background: #444; color: white; }
         .btn-reset { background: #d32f2f; color: white; }
         .btn-add { background: var(--card); border: 2px dashed #999; color: var(--text); margin-top: 10px; font-size: 14px; }
-        .btn:hover { opacity: 0.8; }
+        .btn:hover { opacity: 0.8; transform: translateY(-1px); }
     </style>
 </head>
 <body>
@@ -66,10 +68,7 @@
 <div class="main-layout">
     <div class="fixed-dashboard">
         <div class="viewer-card">
-            <div class="room-info">
-                <span>MISSION PROGRESS</span>
-                <span class="room-tag" id="roomDisplay">ROOM #----</span>
-            </div>
+            <div class="header-title">MISSION PROGRESS</div>
             <div class="main-score"><span id="v-total">0</span> / <span id="v-target">100</span></div>
             
             <div class="bar-bg">
@@ -87,7 +86,7 @@
                 <div class="player-stat-row bg-p4"> <span class="n-4">P4</span> <span id="s-4" class="p-score-detail">0 (0-0)</span> </div>
             </div>
             
-            <div style="margin-top:15px; font-weight:bold; font-size:13px; display:flex; justify-content:space-between; border-top:1px solid #ddd; padding-top:10px;">
+            <div style="margin-top:15px; font-weight:bold; font-size:13px; display:flex; justify-content:space-between; border-top:2px solid var(--border); padding-top:10px;">
                 <span>🍗 치킨: <span id="v-wins" style="color:#2e7d32;">0</span>회</span>
                 <span style="color:#d32f2f;">남은: <span id="v-remain">100</span></span>
             </div>
@@ -166,28 +165,26 @@
     const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
     const app = initializeApp(firebaseConfig); const db = getFirestore(app);
     
-    // 1. 테마 및 방 번호 로드
     document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
     const roomId = new URLSearchParams(window.location.search).get('room') || "default";
-    document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
     const roomRef = doc(db, "kill_sheets", roomId);
 
     let rowCount = 0;
-    const maps = [{name:"에란겔",class:"map-erangel"},{name:"미라마",class:"map-miramar"},{name:"태이고",class:"map-taego"},{name:"비켄디",class:"map-taego"},{name:"론도",class:"map-taego"},{name:"사녹",class:"map-sanhok"},{name:"파라모",class:"map-sanhok"},{name:"카라킨",class:"map-miramar"}];
+    const maps = [{name:"에란겔",class:"map-erangel"},{name:"미라마",class:"map-miramar"},{name:"태이고",class:"map-taego"},{name:"비켄디",class:"map-vikendi"},{name:"론도",class:"map-rondo"},{name:"데스턴",class:"map-taego"},{name:"사녹",class:"map-sanhok"},{name:"파라모",class:"map-sanhok"},{name:"카라킨",class:"map-miramar"}];
 
     function createRow(r) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${r}</td>
-            <td class="map-cell"><select id="map-${r}" onchange="updateMapStyle(${r}); updateAll();" style="width:100%; border:none; background:transparent; color:inherit; font-weight:bold;">
+            <td class="map-cell"><select id="map-${r}" onchange="updateMapStyle(${r}); updateAll();" style="width:100%; border:none; background:transparent; color:inherit; font-weight:bold; cursor:pointer;">
                 <option value="">선택</option>${maps.map(m=>`<option value="${m.name}">${m.name}</option>`).join('')}
             </select></td>
             ${[1,2,3,4].map(p => `
-                <td><input type="number" id="k-${r}-${p}" onchange="updateAll()"></td>
+                <td><input type="number" id="k-${r}-${p}" onchange="updateAll()" style="border:none"></td>
                 <td><input type="checkbox" id="d-${r}-${p}" onchange="updateAll()"></td>
             `).join('')}
             <td><input type="checkbox" id="w-${r}" onchange="updateAll()"></td>
-            <td id="total-${r}" style="font-weight:900;">0</td>
+            <td id="total-${r}" style="font-weight:900; background:rgba(0,0,0,0.02);">0</td>
         `;
         document.getElementById('sheetBody').appendChild(tr); rowCount = r;
     }
@@ -268,7 +265,7 @@
     window.copyRoomLink = () => {
         navigator.clipboard.writeText(window.location.href).then(() => alert("초대 링크 복사 완료!"));
     };
-    window.resetSheet = async () => { if(confirm("초기화?")) { await setDoc(roomRef, {}); location.reload(); } };
+    window.resetSheet = async () => { if(confirm("시트를 초기화하시겠습니까?")) { await setDoc(roomRef, {}); location.reload(); } };
 </script>
 </body>
 </html>
