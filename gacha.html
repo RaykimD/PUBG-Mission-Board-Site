@@ -7,26 +7,32 @@
         :root { --bg: #f8f9fa; --text: #212529; }
         [data-theme='dark'] { --bg: #121212; --text: #e0e0e0; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; }
-        .container { display: flex; max-width: 1000px; margin: 0 auto; padding: 10px; gap: 15px; }
-        .main-game { flex: 2.5; }
-        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+        .container { display: flex; max-width: 1100px; margin: 0 auto; padding: 10px; gap: 15px; height: 95vh; }
+        
+        .main-game { flex: 2.5; display: flex; flex-direction: column; }
+        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; flex: 1; }
+        
         .card-container { aspect-ratio: 1/1; cursor: pointer; transform-style: preserve-3d; transition: transform 0.6s; position: relative; }
         .card-container.is-flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid rgba(0,0,0,0.1); font-size: 10px; }
-        .card-front { background: #2c3e50; color: white; }
-        .card-back { transform: rotateY(180deg); font-size: 24px; } /* 이모티콘 크기 키움 */
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid rgba(0,0,0,0.1); }
+        .card-front { background: #2c3e50; color: white; font-size: 14px; }
+        .card-back { transform: rotateY(180deg); font-size: 45px; } /* 이모티콘 크기 대폭 상향 */
         
-        /* 요청하신 연한 파스텔 배경색 */
-        .rank-normal { background: #d1d1d1; } /* 회색 꽝 */
-        .rank-rare { background: #e3f2fd; }   /* 연한 하늘 */
-        .rank-epic { background: #f3e5f5; }   /* 연한 보라 */
-        .rank-legend { background: #fffde7; } /* 연한 노랑 */
+        .rank-normal { background: #d1d1d1; }
+        .rank-rare { background: #e3f2fd; }
+        .rank-epic { background: #f3e5f5; }
+        .rank-legend { background: #fffde7; }
 
-        .log-box { height: 250px; background: rgba(0,0,0,0.05); border-radius: 8px; padding: 8px; overflow-y: auto; text-align: left; font-size: 11px; }
-        .counts { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; text-align: left; font-size: 12px; line-height: 1.5; }
-        .action-btn { width: 100%; padding: 12px; background: #f39c12; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        
+        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .setting-box { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; text-align: left; }
+        .setting-box label { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
+        .setting-box input { width: 45px; margin-right: 5px; font-size: 11px; border: 1px solid #ccc; border-radius: 3px; }
+
+        .log-box { flex: 1; background: rgba(0,0,0,0.05); border-radius: 8px; padding: 8px; overflow-y: auto; text-align: left; font-size: 12px; border: 1px solid rgba(0,0,0,0.1); }
+        .counts { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; text-align: left; font-size: 13px; line-height: 1.6; border-left: 5px solid #f1c40f; }
+        .action-btn { width: 100%; padding: 12px; background: #f39c12; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .action-btn:hover { background: #d35400; }
+
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 100; font-size: 5rem; font-weight: 900; opacity: 0; transition: 0.5s; }
         .shake { animation: shake 0.5s; }
         @keyframes shake { 0%, 100% { transform:translate(0,0); } 25% { transform:translate(-10px,5px); } 75% { transform:translate(10px,-5px); } }
@@ -43,62 +49,115 @@
             <div class="grid" id="grid"></div>
         </div>
         <div class="side-panel">
-            <div class="counts" id="countDisplay">
-                💣 꽝: 60 | 🔹 레어: 30<br>🔮 에픽: 8 | 👑 전설: 2
+            <div class="setting-box">
+                <label>💰 등급별 단가 설정 (개수)</label>
+                🔹 <input type="number" id="price-rare" value="10" onchange="savePrice()"> 
+                🔮 <input type="number" id="price-epic" value="100" onchange="savePrice()"> 
+                👑 <input type="number" id="price-legend" value="500" onchange="savePrice()">
             </div>
+            <div class="counts" id="countDisplay"></div>
             <div class="log-box" id="logBox"><strong>📜 획득 로그</strong><hr></div>
-            <button class="action-btn" onclick="resetGame()">가챠 초기화</button>
+            <button class="action-btn" onclick="resetGameWithReveal()">가챠 초기화</button>
         </div>
     </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
         const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+        
         document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
         const urlParams = new URLSearchParams(window.location.search);
         let roomId = urlParams.get('room');
         if (!roomId) { roomId = Math.floor(1000 + Math.random() * 9000).toString(); window.location.search = `?room=${roomId}`; }
         document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
+        
         const roomRef = doc(db, "gacha_rooms", roomId);
         const gridEl = document.getElementById('grid'); const cards = [];
+        
+        // 가격 설정 로컬 저장
+        window.savePrice = () => {
+            localStorage.setItem('p-rare', document.getElementById('price-rare').value);
+            localStorage.setItem('p-epic', document.getElementById('price-epic').value);
+            localStorage.setItem('p-legend', document.getElementById('price-legend').value);
+            location.reload(); // 로그에 반영하기 위해 새로고침
+        };
+        document.getElementById('price-rare').value = localStorage.getItem('p-rare') || 10;
+        document.getElementById('price-epic').value = localStorage.getItem('p-epic') || 100;
+        document.getElementById('price-legend').value = localStorage.getItem('p-legend') || 500;
+
         for (let i = 1; i <= 100; i++) {
             const con = document.createElement('div'); con.className = 'card-container';
-            con.innerHTML = `<div class="card-face card-front">${i}</div><div class="card-face card-back">?</div>`;
+            con.innerHTML = `<div class="card-face card-front">${i}</div><div class="card-face card-back"></div>`;
             con.onclick = () => flip(i); gridEl.appendChild(con); cards[i] = con;
         }
+
         async function flip(n) {
-            const docSnap = await getDoc(roomRef); if (!docSnap.exists()) await setDoc(roomRef, { logs: [] });
-            if (docSnap.data()[`card_${n}`]) return;
-            const rand = Math.floor(Math.random() * 100) + 1;
-            let res = { rank: 'normal', icon: '💣', name: '꽝' };
-            if (rand > 98) res = { rank: 'legend', icon: '👑', name: '전설' };
-            else if (rand > 90) res = { rank: 'epic', icon: '🔮', name: '에픽' };
-            else if (rand > 60) res = { rank: 'rare', icon: '🔹', name: '레어' };
-            await updateDoc(roomRef, { [`card_${n}`]: res, logs: arrayUnion(`[${n}번] ${res.icon} ${res.name}`) });
+            const docSnap = await getDoc(roomRef);
+            if (!docSnap.exists()) {
+                // 게임 시작 전 랜덤 배치 생성 (초기화 때 미리 정해짐)
+                return; 
+            }
+            const data = docSnap.data();
+            if (data[`card_${n}`]?.revealed) return;
+
+            const cardInfo = data.layout[n-1];
+            const price = document.getElementById(`price-${cardInfo.rank}`).value || 0;
+            const logMsg = `[${n}번] ${cardInfo.icon} ${cardInfo.name} (${price}개)`;
+
+            await updateDoc(roomRef, { 
+                [`card_${n}`]: { revealed: true, ...cardInfo },
+                logs: arrayUnion(logMsg)
+            });
         }
+
         onSnapshot(roomRef, (snap) => {
-            const data = snap.data() || {};
+            const data = snap.data();
+            if (!data) { initLayout(); return; }
+            
             const counts = { normal: 60, rare: 30, epic: 8, legend: 2 };
             const logBox = document.getElementById('logBox');
             logBox.innerHTML = '<strong>📜 획득 로그</strong><hr>';
+            
             (data.logs || []).slice().reverse().forEach(l => {
-                const item = document.createElement('div'); item.innerText = l;
+                const item = document.createElement('div'); item.style.padding = "2px 0";
+                item.innerText = l;
                 if(l.includes('전설')) item.style.color = '#d4af37';
+                else if(l.includes('에픽')) item.style.color = '#9b59b6';
                 logBox.appendChild(item);
             });
+
             for (let i = 1; i <= 100; i++) {
                 const c = data[`card_${i}`];
-                if (c) {
+                const back = cards[i].querySelector('.card-back');
+                if (c && c.revealed) {
                     if (!cards[i].classList.contains('is-flipped')) triggerEffect(c.rank);
                     cards[i].classList.add('is-flipped');
-                    const back = cards[i].querySelector('.card-back');
                     back.className = `card-face card-back rank-${c.rank}`; back.innerText = c.icon;
                     counts[c.rank]--;
-                } else cards[i].classList.remove('is-flipped');
+                } else {
+                    cards[i].classList.remove('is-flipped');
+                }
             }
-            document.getElementById('countDisplay').innerHTML = `💣 꽝: ${counts.normal} | 🔹 레어: ${counts.rare}<br>🔮 에픽: ${counts.epic} | 👑 전설: ${counts.legend}`;
+            const pR = document.getElementById('price-rare').value;
+            const pE = document.getElementById('price-epic').value;
+            const pL = document.getElementById('price-legend').value;
+            document.getElementById('countDisplay').innerHTML = `💣 꽝: ${counts.normal}<br>🔹 레어(${pR}개): ${counts.rare}<br>🔮 에픽(${pE}개): ${counts.epic}<br>👑 전설(${pL}개): ${counts.legend}`;
         });
+
+        async function initLayout() {
+            let pool = [
+                ...Array(60).fill({rank:'normal', icon:'💣', name:'꽝'}),
+                ...Array(30).fill({rank:'rare', icon:'🔹', name:'레어'}),
+                ...Array(8).fill({rank:'epic', icon:'🔮', name:'에픽'}),
+                ...Array(2).fill({rank:'legend', icon:'👑', name:'전설'})
+            ];
+            pool = pool.sort(() => Math.random() - 0.5);
+            await setDoc(roomRef, { layout: pool, logs: [] });
+        }
+
         function triggerEffect(rank) {
             const o = document.getElementById('overlay');
             if (rank === 'legend') { o.innerText = "LEGEND!!"; o.style.color = "#fbc02d"; o.style.opacity = 1; document.body.classList.add('shake'); }
@@ -106,7 +165,27 @@
             else return;
             setTimeout(() => { o.style.opacity = 0; document.body.classList.remove('shake'); }, 1500);
         }
-        window.resetGame = async () => { if(confirm("초기화?")) await setDoc(roomRef, { logs: [] }); };
+
+        window.resetGameWithReveal = async () => {
+            if(!confirm("모든 칸을 공개한 후 초기화하시겠습니까?")) return;
+            const docSnap = await getDoc(roomRef);
+            const data = docSnap.data();
+            if(!data) return;
+
+            // 1. 모든 칸 뒤집기 애니메이션
+            for(let i=1; i<=100; i++) {
+                const c = data.layout[i-1];
+                const back = cards[i].querySelector('.card-back');
+                cards[i].classList.add('is-flipped');
+                back.className = `card-face card-back rank-${c.rank}`; back.innerText = c.icon;
+            }
+            
+            // 2. 3초 후 실제 서버 초기화
+            setTimeout(async () => {
+                await initLayout();
+                alert("초기화 완료!");
+            }, 3000);
+        };
     </script>
 </body>
 </html>
