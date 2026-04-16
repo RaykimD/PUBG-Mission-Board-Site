@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>폭탄빙고 10x10 - 방송 최적화</title>
+    <title>폭탄빙고 10x10</title>
     <style>
         :root { 
             --bg: #fdfdfd; --card: #ffffff; --text: #333; 
@@ -13,20 +13,18 @@
         }
         body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 15px; font-size: 12px; overflow: hidden; }
         
-        /* 메인 레이아웃: 전체 크기를 줄여 한 화면에 들어오도록 설정 */
         .main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1000px; margin: 0 auto; }
         
         .fixed-dashboard { position: sticky; top: 15px; width: 220px; display: flex; flex-direction: column; gap: 10px; }
         .viewer-card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); text-align: center; }
         
-        .bingo-count { font-size: 48px; font-weight: 900; color: var(--primary); margin: 5px 0; }
+        .mission-score { font-size: 42px; font-weight: 900; color: var(--accent); margin: 5px 0; }
         
         .content-area { flex: 1; display: flex; flex-direction: column; gap: 10px; }
         
         .setting-box { background: var(--card); padding: 10px 15px; border-radius: 10px; border: 2px solid var(--border); }
         .setting-flex { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         
-        /* 그리드 크기 축소: 방송 화면 송출용 최적화 */
         .bingo-grid { 
             display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; 
             background: var(--card); padding: 8px; border-radius: 12px; border: 2px solid var(--border);
@@ -53,9 +51,9 @@
 <div class="main-layout">
     <div class="fixed-dashboard">
         <div class="viewer-card">
-            <div style="font-weight:bold; color:#888; font-size:11px;">BINGO LINE</div>
-            <div class="bingo-count" id="bingoDisplay">0</div>
-            <div style="font-weight:bold; color:#666;">현재 빙고</div>
+            <div style="font-weight:bold; color:#888; font-size:11px;">MISSION PROGRESS</div>
+            <div class="mission-score"><span id="filledCount">0</span> / <span id="remainCount">100</span></div>
+            <div style="font-weight:bold; color:#666;">채운 칸 / 남은 칸</div>
         </div>
         
         <button class="btn btn-copy" onclick="copyRoomLink()">🔗 초대 링크 복사</button>
@@ -70,7 +68,7 @@
                     🎨 테마: <input type="color" id="themeColor" value="#ff4d4d" onchange="changeTheme(this.value)">
                 </div>
                 <div style="font-size:11px; color: var(--primary);">
-                    클릭 시 상하좌우가 함께 터집니다.
+                    클릭 시 상하좌우가 함께 터집니다 (누적 토글).
                 </div>
             </div>
         </div>
@@ -91,7 +89,6 @@
 
     const gridEl = document.getElementById('bingoGrid');
     const cells = [];
-    let currentActiveCells = []; // 무한 루프 방지를 위한 로컬 변수
 
     // 10x10 그리드 생성
     for (let i = 0; i < 100; i++) {
@@ -103,35 +100,43 @@
         cells.push(cell);
     }
 
-    // 버그 수정: 클릭 시 로직 개선
+    // [핵심 수정] 누적 토글 로직 구현
     async function handleCellClick(index) {
         const docSnap = await getDoc(roomRef);
-        // 방이 없으면 초기화 후 리턴
-        if (!docSnap.exists()) {
-            await setDoc(roomRef, { activeCells: [], themeColor: "#ff4d4d" });
-            return;
+        let currentActive = [];
+        let theme = "#ff4d4d";
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            currentActive = data.activeCells || [];
+            theme = data.themeColor || "#ff4d4d";
         }
 
-        const data = docSnap.data();
-        let active = data.activeCells || [];
-        
         const row = Math.floor(index / 10);
         const col = index % 10;
-        const targets = [index];
-        if (row > 0) targets.push(index - 10);
-        if (row < 9) targets.push(index + 10);
-        if (col > 0) targets.push(index - 1);
-        if (col < 9) targets.push(index + 1);
+        const targets = [index]; // 클릭한 칸
+        if (row > 0) targets.push(index - 10); // 상
+        if (row < 9) targets.push(index + 10); // 하
+        if (col > 0) targets.push(index - 1);  // 좌
+        if (col < 9) targets.push(index + 1);  // 우
+
+        // 기존 목록을 복사하여 사용
+        let newActive = [...currentActive];
 
         targets.forEach(t => {
-            if (active.includes(t)) active = active.filter(v => v !== t);
-            else active.push(t);
+            // [토글 핵심] 이미 목록에 있으면 제거(꺼짐), 없으면 추가(켜짐)
+            if (newActive.includes(t)) {
+                newActive = newActive.filter(v => v !== t);
+            } else {
+                newActive.push(t);
+            }
         });
 
-        await updateDoc(roomRef, { activeCells: active });
+        // 겹치는 구간 문제 해결된 새로운 목록으로 업데이트
+        await setDoc(roomRef, { activeCells: newActive, themeColor: theme }, { merge: true });
     }
 
-    // 실시간 동기화 (깜빡임 버그 해결)
+    // 실시간 동기화
     onSnapshot(roomRef, (snap) => {
         const data = snap.data();
         if (!data) return;
@@ -141,37 +146,20 @@
             document.getElementById('themeColor').value = data.themeColor;
         }
 
-        currentActiveCells = data.activeCells || [];
+        const activeList = data.activeCells || [];
         cells.forEach((cell, i) => {
-            if (currentActiveCells.includes(i)) cell.classList.add('active');
+            if (activeList.includes(i)) cell.classList.add('active');
             else cell.classList.remove('active');
         });
-        calculateBingo(currentActiveCells);
+        updateStatus(activeList);
     });
 
-    function calculateBingo(active) {
-        let count = 0;
-        const b = Array(100).fill(false);
-        active.forEach(idx => b[idx] = true);
-
-        for (let i = 0; i < 10; i++) {
-            // 가로
-            let rowCheck = true;
-            for(let j=0; j<10; j++) if(!b[i*10 + j]) rowCheck = false;
-            if(rowCheck) count++;
-            // 세로
-            let colCheck = true;
-            for(let j=0; j<10; j++) if(!b[i + j*10]) colCheck = false;
-            if(colCheck) count++;
-        }
-        // 대각선
-        let d1=true, d2=true;
-        for(let i=0; i<10; i++) {
-            if(!b[i*11]) d1=false;
-            if(!b[9 + i*9]) d2=false;
-        }
-        if(d1) count++; if(d2) count++;
-        document.getElementById('bingoDisplay').innerText = count;
+    // 현황판 업데이트 (칸수 기준)
+    function updateStatus(activeList) {
+        const filled = activeList.length;
+        const remain = 100 - filled;
+        document.getElementById('filledCount').innerText = filled;
+        document.getElementById('remainCount').innerText = remain;
     }
 
     window.changeTheme = async (color) => { await updateDoc(roomRef, { themeColor: color }); };
