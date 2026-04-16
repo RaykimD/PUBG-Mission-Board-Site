@@ -2,53 +2,59 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>가챠배그 - 배그 미션</title>
+    <title>가챠배그 - 시네마틱 버전</title>
     <style>
         :root { --bg: #f8f9fa; --text: #212529; }
         [data-theme='dark'] { --bg: #121212; --text: #e0e0e0; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; }
         
-        /* 전체 컨테이너 크기 제한 */
-        .container { display: flex; max-width: 900px; margin: 0 auto; padding: 10px; gap: 15px; height: 100vh; box-sizing: border-box; }
+        .container { display: flex; max-width: 1000px; margin: 0 auto; padding: 10px; gap: 15px; height: 100vh; box-sizing: border-box; position: relative; }
+        .main-game { flex: 2.5; display: flex; flex-direction: column; min-width: 0; }
+        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; z-index: 1; }
         
-        /* 게임 판 크기 축소 */
-        .main-game { flex: 2.2; display: flex; flex-direction: column; min-width: 0; }
-        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
-        
+        /* 카드 기본 스타일 */
         .card-container { aspect-ratio: 1/1; cursor: pointer; transform-style: preserve-3d; transition: transform 0.4s; position: relative; }
         .card-container.is-flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,0,0,0.1); box-sizing: border-box; }
-        
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,0,0,0.1); }
         .card-front { background: #2c3e50; color: white; font-size: 11px; }
-        .card-back { transform: rotateY(180deg); font-size: 32px; } /* 이모티콘만 크게 */
+        .card-back { transform: rotateY(180deg); font-size: 32px; }
         
-        /* 연한 파스텔 배경 */
+        /* 등급 배경색 */
         .rank-normal { background: #e0e0e0; } 
         .rank-rare { background: #e3f2fd; }   
         .rank-epic { background: #f3e5f5; }   
         .rank-legend { background: #fffde7; }
 
-        /* 사이드 패널 */
+        /* [핵심] 시네마틱 연출 클래스 */
+        .cinematic {
+            position: fixed !important; top: 50% !important; left: 50% !important;
+            width: 250px !important; height: 250px !important;
+            margin-left: -125px; margin-top: -125px;
+            z-index: 9999 !important;
+            transform: rotateY(180deg) scale(1.5) !important;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            box-shadow: 0 0 100px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 폭죽 파티클 */
+        .particle { position: fixed; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; z-index: 10000; }
+
+        /* 사이드바 및 UI */
         .side-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 250px; }
         .setting-box { background: rgba(0,0,0,0.05); padding: 8px; border-radius: 8px; text-align: left; font-size: 11px; }
-        .setting-box input { width: 40px; padding: 2px; border: 1px solid #ccc; border-radius: 3px; }
-
-        /* 가로 바 형태의 스코어보드 */
-        .status-bars { display: flex; flex-direction: column; gap: 4px; margin-bottom: 5px; }
-        .bar-wrap { height: 18px; background: #eee; border-radius: 9px; overflow: hidden; position: relative; }
-        .bar-fill { height: 100%; transition: width 0.4s; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: bold; color: #333; }
+        .setting-box input { width: 40px; padding: 2px; }
+        .status-bars { display: flex; flex-direction: column; gap: 4px; }
+        .bar-wrap { height: 18px; background: #eee; border-radius: 9px; overflow: hidden; }
+        .bar-fill { height: 100%; transition: width 0.4s; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: bold; }
         .b-normal { background: #bdbdbd; } .b-rare { background: #90caf9; } .b-epic { background: #ce93d8; } .b-legend { background: #fff59d; }
-
         .log-box { flex: 1; background: rgba(0,0,0,0.05); border-radius: 8px; padding: 8px; overflow-y: auto; text-align: left; font-size: 11px; border: 1px solid rgba(0,0,0,0.1); }
-        .action-btn { width: 100%; padding: 10px; background: #f39c12; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .action-btn { width: 100%; padding: 10px; background: #f39c12; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 100; font-size: 4rem; font-weight: 900; opacity: 0; transition: 0.3s; text-shadow: 0 0 10px white; }
-        .shake { animation: shake 0.4s; }
-        @keyframes shake { 0%, 100% { transform:translate(0,0); } 25% { transform:translate(-8px,4px); } 75% { transform:translate(8px,-4px); } }
+        #titleOverlay { position: fixed; top: 20%; left: 0; width: 100%; text-align: center; font-size: 5rem; font-weight: 900; z-index: 10001; opacity: 0; transition: 0.5s; pointer-events: none; }
     </style>
 </head>
 <body>
-    <div id="overlay"></div>
+    <div id="titleOverlay"></div>
     <div class="container">
         <div class="main-game">
             <header style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
@@ -64,14 +70,12 @@
                 🔮 <input type="number" id="p-epic" value="100" onchange="saveP()"> 
                 👑 <input type="number" id="p-legend" value="500" onchange="saveP()">
             </div>
-            
-            <div class="status-bars" id="barBox">
-                <div class="bar-wrap"><div id="bar-normal" class="bar-fill b-normal">💣 꽝: 60</div></div>
-                <div class="bar-wrap"><div id="bar-rare" class="bar-fill b-rare">🔹 레어: 30</div></div>
-                <div class="bar-wrap"><div id="bar-epic" class="bar-fill b-epic">🔮 에픽: 8</div></div>
-                <div class="bar-wrap"><div id="bar-legend" class="bar-fill b-legend">👑 전설: 2</div></div>
+            <div class="status-bars">
+                <div class="bar-wrap"><div id="bar-normal" class="bar-fill b-normal">💣 꽝</div></div>
+                <div class="bar-wrap"><div id="bar-rare" class="bar-fill b-rare">🔹 레어</div></div>
+                <div class="bar-wrap"><div id="bar-epic" class="bar-fill b-epic">🔮 에픽</div></div>
+                <div class="bar-wrap"><div id="bar-legend" class="bar-fill b-legend">👑 전설</div></div>
             </div>
-
             <div class="log-box" id="logBox"><strong>📜 획득 로그</strong><hr></div>
             <button class="action-btn" onclick="resetWithReveal()">가챠 초기화 (전체공개)</button>
         </div>
@@ -89,9 +93,7 @@
         let roomId = urlParams.get('room');
         if (!roomId) { roomId = Math.floor(1000 + Math.random() * 9000).toString(); window.location.search = `?room=${roomId}`; }
         document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
-        
         const roomRef = doc(db, "gacha_rooms", roomId);
-        const gridEl = document.getElementById('grid'); const cards = [];
         
         window.saveP = () => {
             localStorage.setItem('p-rare', document.getElementById('p-rare').value);
@@ -102,6 +104,7 @@
         document.getElementById('p-epic').value = localStorage.getItem('p-epic') || 100;
         document.getElementById('p-legend').value = localStorage.getItem('p-legend') || 500;
 
+        const gridEl = document.getElementById('grid'); const cards = [];
         for (let i = 1; i <= 100; i++) {
             const con = document.createElement('div'); con.className = 'card-container';
             con.innerHTML = `<div class="card-face card-front">${i}</div><div class="card-face card-back"></div>`;
@@ -111,37 +114,28 @@
         async function flip(n) {
             const docSnap = await getDoc(roomRef);
             if (!docSnap.exists()) { await initLayout(); return; }
-            const data = docSnap.data();
-            if (data[`card_${n}`]) return;
-
-            const cardInfo = data.layout[n-1];
-            const pId = cardInfo.rank === 'normal' ? null : 'p-'+cardInfo.rank;
-            const price = pId ? ` (${document.getElementById(pId).value}개)` : "";
-            const logMsg = `[${n}번] ${cardInfo.icon} ${cardInfo.name}${price}`;
-
-            await updateDoc(roomRef, { [`card_${n}`]: cardInfo, logs: arrayUnion(logMsg) });
+            if (docSnap.data()[`card_${n}`]) return;
+            const cardInfo = docSnap.data().layout[n-1];
+            const price = cardInfo.rank === 'normal' ? "" : ` (${document.getElementById('p-'+cardInfo.rank).value}개)`;
+            await updateDoc(roomRef, { [`card_${n}`]: cardInfo, logs: arrayUnion(`[${n}번] ${cardInfo.icon} ${cardInfo.name}${price}`) });
         }
 
         onSnapshot(roomRef, (snap) => {
-            const data = snap.data();
-            if (!data) { initLayout(); return; }
-            
+            const data = snap.data(); if (!data) return;
             const counts = { normal: 60, rare: 30, epic: 8, legend: 2 };
-            const logBox = document.getElementById('logBox');
-            logBox.innerHTML = '<strong>📜 획득 로그</strong><hr>';
+            document.getElementById('logBox').innerHTML = '<strong>📜 획득 로그</strong><hr>';
             (data.logs || []).slice().reverse().forEach(l => {
                 const item = document.createElement('div'); item.innerText = l;
                 if(l.includes('전설')) item.style.color = '#d4af37';
                 else if(l.includes('에픽')) item.style.color = '#9b59b6';
-                logBox.appendChild(item);
+                document.getElementById('logBox').appendChild(item);
             });
-
             for (let i = 1; i <= 100; i++) {
                 const c = data[`card_${i}`];
-                const back = cards[i].querySelector('.card-back');
                 if (c) {
-                    if (!cards[i].classList.contains('is-flipped')) triggerEffect(c.rank);
+                    if (!cards[i].classList.contains('is-flipped')) playCinematic(i, c.rank);
                     cards[i].classList.add('is-flipped');
+                    const back = cards[i].querySelector('.card-back');
                     back.className = `card-face card-back rank-${c.rank}`; back.innerText = c.icon;
                     counts[c.rank]--;
                 } else { cards[i].classList.remove('is-flipped'); }
@@ -149,41 +143,61 @@
             updateBars(counts);
         });
 
+        function playCinematic(index, rank) {
+            if (rank !== 'epic' && rank !== 'legend') return;
+            const card = cards[index];
+            const overlay = document.getElementById('titleOverlay');
+            
+            card.classList.add('cinematic');
+            overlay.innerText = rank === 'legend' ? "LEGENDARY!!" : "EPIC!";
+            overlay.style.color = rank === 'legend' ? "#fbc02d" : "#9b59b6";
+            overlay.style.opacity = 1;
+
+            for(let i=0; i<30; i++) createParticle(rank === 'legend' ? '#f1c40f' : '#9b59b6');
+
+            setTimeout(() => {
+                card.classList.remove('cinematic');
+                overlay.style.opacity = 0;
+            }, 2000);
+        }
+
+        function createParticle(color) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.background = color;
+            p.style.left = '50%'; p.style.top = '50%';
+            document.body.appendChild(p);
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 100 + Math.random() * 200;
+            p.animate([
+                { transform: 'translate(0, 0)', opacity: 1 },
+                { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`, opacity: 0 }
+            ], { duration: 1000, easing: 'ease-out' }).onfinish = () => p.remove();
+        }
+
         function updateBars(counts) {
             const total = {normal:60, rare:30, epic:8, legend:2};
             ['normal','rare','epic','legend'].forEach(r => {
                 const bar = document.getElementById('bar-'+r);
-                const p = (counts[r] / total[r]) * 100;
-                bar.style.width = p + "%";
+                bar.style.width = (counts[r]/total[r]*100) + "%";
                 bar.innerText = `${r==='normal'?'💣':r==='rare'?'🔹':r==='epic'?'🔮':'👑'} ${counts[r]}`;
             });
         }
 
         async function initLayout() {
-            let pool = [...Array(60).fill({rank:'normal', icon:'💣', name:'꽝'}), ...Array(30).fill({rank:'rare', icon:'🔹', name:'레어'}), ...Array(8).fill({rank:'epic', icon:'🔮', name:'에픽'}), ...Array(2).fill({rank:'legend', icon:'👑', name:'전설'})];
-            pool = pool.sort(() => Math.random() - 0.5);
+            let pool = [...Array(60).fill({rank:'normal', icon:'💣', name:'꽝'}), ...Array(30).fill({rank:'rare', icon:'🔹', name:'레어'}), ...Array(8).fill({rank:'epic', icon:'🔮', name:'에픽'}), ...Array(2).fill({rank:'legend', icon:'👑', name:'전설'})].sort(() => Math.random() - 0.5);
             await setDoc(roomRef, { layout: pool, logs: [] });
         }
 
-        function triggerEffect(rank) {
-            const o = document.getElementById('overlay');
-            if (rank === 'legend') { o.innerText = "LEGEND!!"; o.style.color = "#fbc02d"; o.style.opacity = 1; document.body.classList.add('shake'); }
-            else if (rank === 'epic') { o.innerText = "EPIC!"; o.style.color = "#9b59b6"; o.style.opacity = 1; }
-            else return;
-            setTimeout(() => { o.style.opacity = 0; document.body.classList.remove('shake'); }, 1200);
-        }
-
         window.resetWithReveal = async () => {
-            if(!confirm("전체 공개 후 초기화하시겠습니까?")) return;
-            const docSnap = await getDoc(roomRef);
-            const data = docSnap.data();
+            const data = (await getDoc(roomRef)).data();
             for(let i=1; i<=100; i++) {
                 const c = data.layout[i-1];
                 const back = cards[i].querySelector('.card-back');
                 cards[i].classList.add('is-flipped');
                 back.className = `card-face card-back rank-${c.rank}`; back.innerText = c.icon;
             }
-            setTimeout(async () => { await initLayout(); alert("초기화 완료!"); }, 3000);
+            setTimeout(async () => { await initLayout(); }, 3000);
         };
     </script>
 </body>
