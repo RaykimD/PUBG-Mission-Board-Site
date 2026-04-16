@@ -2,87 +2,213 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>땅따먹기 - 배그 미션</title>
+    <title>땅따먹기</title>
     <style>
-        :root { --bg: #f8f9fa; --text: #212529; --card: #ffffff; }
-        [data-theme='dark'] { --bg: #121212; --text: #e0e0e0; --card: #1e1e1e; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; }
-        .container { max-width: 450px; margin: 0 auto; padding: 10px; }
-        .team-selector { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; }
-        .team-btn { flex: 1; padding: 8px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; opacity: 0.4; font-size: 12px; }
-        .team-btn.active { opacity: 1; transform: scale(1.05); box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-        .t-red { background: #ff4d4d; } .t-blue { background: #4d94ff; }
-        .t-yellow { background: #ffdb4d; color: black; } .t-green { background: #4dff88; color: black; }
-        .scoreboard { display: flex; height: 25px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: #eee; }
-        .score-bar { transition: width 0.4s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: white; overflow: hidden; }
-        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
-        .card { aspect-ratio: 1/1; background: var(--card); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
-        .cap-red { background: #ff4d4d !important; color: white; border: none; }
-        .cap-blue { background: #4d94ff !important; color: white; border: none; }
-        .cap-yellow { background: #ffdb4d !important; color: black; border: none; }
-        .cap-green { background: #4dff88 !important; color: black; border: none; }
-        .action-btn { width: 100%; padding: 12px; margin-top: 20px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        :root { 
+            --bg: #fdfdfd; --card: #ffffff; --text: #333; --border: #444;
+            --t1-color: #ff4d4d; --t2-color: #4d94ff; --t3-color: #2ecc71; --t4-color: #f1c40f;
+        }
+        [data-theme='dark'] { 
+            --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; --border: #666;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 15px; font-size: 12px; transition: 0.3s; overflow: hidden; }
+        
+        .main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1200px; margin: 0 auto; height: 95vh; }
+        
+        /* 좌측 대시보드 */
+        .fixed-dashboard { width: 280px; display: flex; flex-direction: column; gap: 10px; height: 100%; }
+        .viewer-card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); }
+        
+        .header-title { font-weight: bold; color: #888; font-size: 11px; letter-spacing: 1px; margin-bottom: 10px; text-align: center; }
+        
+        /* 팀 설정 및 점수 행 */
+        .team-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; position: relative; }
+        .team-row.selected { border: 3px solid var(--text); box-shadow: 0 0 10px rgba(0,0,0,0.2); transform: scale(1.02); }
+        
+        .team-info-top { display: flex; justify-content: space-between; align-items: center; }
+        .team-name-input { border: none; background: transparent; color: white; font-weight: 900; font-size: 14px; width: 120px; outline: none; }
+        .team-score { font-size: 20px; font-weight: 900; color: white; }
+        .color-picker-mini { width: 20px; height: 20px; border: 1px solid white; cursor: pointer; border-radius: 4px; }
+
+        /* 우측 게임 영역 */
+        .content-area { flex: 1; display: flex; flex-direction: column; gap: 10px; height: 100%; }
+        .setting-box { background: var(--card); padding: 12px 15px; border-radius: 10px; border: 2px solid var(--border); font-weight: bold; }
+        
+        .land-grid { 
+            display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; 
+            background: var(--card); padding: 10px; border-radius: 12px; border: 2px solid var(--border);
+        }
+        .cell { 
+            aspect-ratio: 1/1; background: #eee; border-radius: 4px; border: 1px solid #ccc;
+            cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px;
+        }
+        [data-theme='dark'] .cell { background: #3d3d3e; border-color: #555; }
+        
+        /* 팀 점령 색상 (변수 연동) */
+        .cell.t1 { background-color: var(--t1-color) !important; color: white; }
+        .cell.t2 { background-color: var(--t2-color) !important; color: white; }
+        .cell.t3 { background-color: var(--t3-color) !important; color: white; }
+        .cell.t4 { background-color: var(--t4-color) !important; color: white; }
+
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; border: 2px solid var(--border); margin-bottom: 5px; }
+        .btn-copy { background: #27ae60; color: white; }
+        .btn-lobby { background: #444; color: white; }
+        .btn-reset { background: #d32f2f; color: white; margin-top: auto; }
+        
+        .help-text { font-size: 11px; color: #888; margin-top: 5px; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:13px;">
-            <a href="index.html" style="text-decoration:none; color:var(--text)">🏠 로비</a>
-            <div id="roomDisplay" style="font-weight:bold; color:#ff4444;"></div>
-        </header>
-        <div class="team-selector">
-            <button class="team-btn t-red" onclick="selectTeam('red')">빨강</button>
-            <button class="team-btn t-blue" onclick="selectTeam('blue')">파랑</button>
-            <button class="team-btn t-yellow" onclick="selectTeam('yellow')">노랑</button>
-            <button class="team-btn t-green" onclick="selectTeam('green')">초록</button>
+
+<div class="main-layout">
+    <div class="fixed-dashboard">
+        <div class="viewer-card">
+            <div class="header-title">LAND CONQUEST</div>
+            <div id="team-settings">
+                <div class="team-row selected" id="row-1" onclick="selectTeam(1)" style="background: var(--t1-color);">
+                    <div class="team-info-top">
+                        <input type="text" id="name-1" class="team-name-input" value="RED TEAM" onchange="updateSettings()">
+                        <input type="color" id="cp-1" class="color-picker-mini" value="#ff4d4d" onchange="changeTeamColor(1, this.value)">
+                    </div>
+                    <div class="team-score" id="s1">0</div>
+                </div>
+                <div class="team-row" id="row-2" onclick="selectTeam(2)" style="background: var(--t2-color);">
+                    <div class="team-info-top">
+                        <input type="text" id="name-2" class="team-name-input" value="BLUE TEAM" onchange="updateSettings()">
+                        <input type="color" id="cp-2" class="color-picker-mini" value="#4d94ff" onchange="changeTeamColor(2, this.value)">
+                    </div>
+                    <div class="team-score" id="s2">0</div>
+                </div>
+                <div class="team-row" id="row-3" onclick="selectTeam(3)" style="background: var(--t3-color);">
+                    <div class="team-info-top">
+                        <input type="text" id="name-3" class="team-name-input" value="GREEN TEAM" onchange="updateSettings()">
+                        <input type="color" id="cp-3" class="color-picker-mini" value="#2ecc71" onchange="changeTeamColor(3, this.value)">
+                    </div>
+                    <div class="team-score" id="s3">0</div>
+                </div>
+                <div class="team-row" id="row-4" onclick="selectTeam(4)" style="background: var(--t4-color);">
+                    <div class="team-info-top">
+                        <input type="text" id="name-4" class="team-name-input" value="YELLOW TEAM" onchange="updateSettings()">
+                        <input type="color" id="cp-4" class="color-picker-mini" value="#f1c40f" onchange="changeTeamColor(4, this.value)">
+                    </div>
+                    <div class="team-score" id="s4">0</div>
+                </div>
+            </div>
+            <div class="help-text">좌측 팀 카드를 클릭하여 점령 팀을 선택하세요.</div>
         </div>
-        <div class="scoreboard" id="scoreboard">
-            <div id="bar-red" class="score-bar t-red" style="width: 25%">0</div>
-            <div id="bar-blue" class="score-bar t-blue" style="width: 25%">0</div>
-            <div id="bar-yellow" class="score-bar t-yellow" style="width: 25%">0</div>
-            <div id="bar-green" class="score-bar t-green" style="width: 25%">0</div>
-        </div>
-        <div class="grid" id="grid"></div>
-        <button class="action-btn" onclick="resetGame()">땅따먹기 초기화</button>
+        
+        <button class="btn btn-copy" onclick="copyRoomLink()">🔗 초대 링크 복사</button>
+        <button class="btn btn-lobby" onclick="location.href='index.html'">🏠 로비로 돌아가기</button>
+        <button class="btn btn-reset" onclick="resetLand()">🧹 영토 초기화</button>
     </div>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
-        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
-        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
-        const urlParams = new URLSearchParams(window.location.search);
-        let roomId = urlParams.get('room');
-        if (!roomId) { roomId = Math.floor(1000 + Math.random() * 9000).toString(); window.location.search = `?room=${roomId}`; }
-        document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
-        const roomRef = doc(db, "land_rooms", roomId);
-        let myTeam = null;
-        window.selectTeam = (t) => { myTeam = t; document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('active')); document.querySelector(`.t-${t}`).classList.add('active'); };
-        const gridEl = document.getElementById('grid'); const cards = [];
-        for (let i = 1; i <= 100; i++) {
-            const div = document.createElement('div'); div.className = 'card'; div.innerText = i;
-            div.onclick = () => captureLand(i); gridEl.appendChild(div); cards[i] = div;
-        }
-        async function captureLand(n) {
-            if (!myTeam) return alert("팀을 선택해주세요!");
-            const docSnap = await getDoc(roomRef); if (!docSnap.exists()) await setDoc(roomRef, {});
-            await updateDoc(roomRef, { [`card_${n}`]: myTeam });
-        }
-        onSnapshot(roomRef, (snapshot) => {
-            const data = snapshot.data() || {};
-            const scores = { red: 0, blue: 0, yellow: 0, green: 0 };
-            for (let i = 1; i <= 100; i++) {
-                const team = data[`card_${i}`];
-                if (team) { cards[i].className = `card cap-${team}`; cards[i].innerText = team[0].toUpperCase(); scores[team]++; }
-                else { cards[i].className = 'card'; cards[i].innerText = i; }
-            }
-            const total = Object.values(scores).reduce((a,b)=>a+b, 0) || 1;
-            ['red','blue','yellow','green'].forEach(t => {
-                const p = (scores[t]/total)*100; const bar = document.getElementById(`bar-${t}`);
-                bar.style.width = p+"%"; bar.innerText = scores[t];
+
+    <div class="content-area">
+        <div class="setting-box">
+            <span>🚩 점령 모드: <span id="currentModeText" style="color: var(--t1-color);">RED TEAM</span></span>
+            <div style="font-size: 11px; color: #888;">맵의 칸을 누르면 선택된 팀의 색으로 변합니다.</div>
+        </div>
+        <div class="land-grid" id="landGrid"></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
+    const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+    
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+    const roomId = new URLSearchParams(window.location.search).get('room') || "default_land";
+    const roomRef = doc(db, "land_rooms", roomId);
+
+    const gridEl = document.getElementById('landGrid');
+    const cells = [];
+    let selectedTeam = 1;
+
+    // 그리드 생성
+    for (let i = 0; i < 100; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell'; cell.innerText = i + 1;
+        cell.onclick = () => handleCellClick(i);
+        gridEl.appendChild(cell); cells.push(cell);
+    }
+
+    // 팀 선택 기능 (클릭 방식)
+    window.selectTeam = (idx) => {
+        selectedTeam = idx;
+        document.querySelectorAll('.team-row').forEach(r => r.classList.remove('selected'));
+        document.getElementById(`row-${idx}`).classList.add('selected');
+        
+        const name = document.getElementById(`name-${idx}`).value;
+        const color = document.getElementById(`cp-${idx}`).value;
+        const modeText = document.getElementById('currentModeText');
+        modeText.innerText = name;
+        modeText.style.color = color;
+    };
+
+    window.changeTeamColor = async (idx, color) => {
+        document.documentElement.style.setProperty(`--t${idx}-color`, color);
+        document.getElementById(`row-${idx}`).style.background = color;
+        if(selectedTeam === idx) document.getElementById('currentModeText').style.color = color;
+        await updateSettings();
+    };
+
+    // 설정 업데이트 (이름, 색상)
+    window.updateSettings = async () => {
+        const settings = {
+            names: [1,2,3,4].map(i => document.getElementById(`name-${i}`).value),
+            colors: [1,2,3,4].map(i => document.getElementById(`cp-${i}`).value)
+        };
+        await updateDoc(roomRef, { settings });
+    };
+
+    async function handleCellClick(index) {
+        const docSnap = await getDoc(roomRef);
+        let landData = docSnap.exists() ? (docSnap.data().landData || {}) : {};
+
+        if (landData[index] === selectedTeam) delete landData[index];
+        else landData[index] = selectedTeam;
+
+        await setDoc(roomRef, { landData }, { merge: true });
+    }
+
+    onSnapshot(roomRef, (snap) => {
+        const data = snap.data(); if (!data) return;
+        
+        // 1. 설정 동기화
+        if (data.settings) {
+            data.settings.colors.forEach((c, i) => {
+                document.documentElement.style.setProperty(`--t${i+1}-color`, c);
+                document.getElementById(`row-${i+1}`).style.background = c;
+                document.getElementById(`cp-${i+1}`).value = c;
             });
+            data.settings.names.forEach((n, i) => {
+                const input = document.getElementById(`name-${i+1}`);
+                if (document.activeElement !== input) input.value = n;
+            });
+        }
+
+        // 2. 영토 및 점수 업데이트
+        const landData = data.landData || {};
+        const scores = [0, 0, 0, 0, 0];
+        cells.forEach((cell, i) => {
+            cell.className = 'cell';
+            if (landData[i]) {
+                cell.classList.add('t' + landData[i]);
+                scores[landData[i]]++;
+            }
         });
-        window.resetGame = async () => { if(confirm("초기화?")) await setDoc(roomRef, {}); };
-    </script>
+        for (let i = 1; i <= 4; i++) document.getElementById('s' + i).innerText = scores[i];
+        
+        // 현재 선택된 팀 텍스트 실시간 동기화
+        const modeText = document.getElementById('currentModeText');
+        modeText.innerText = document.getElementById(`name-${selectedTeam}`).value;
+        modeText.style.color = document.getElementById(`cp-${selectedTeam}`).value;
+    });
+
+    window.copyRoomLink = () => { navigator.clipboard.writeText(window.location.href).then(() => alert("초대 링크 복사 완료!")); };
+    window.resetLand = async () => { if (confirm("모든 영토를 초기화할까요?")) await setDoc(roomRef, { landData: {} }, { merge: true }); };
+</script>
 </body>
 </html>
