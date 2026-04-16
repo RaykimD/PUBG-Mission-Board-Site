@@ -11,20 +11,23 @@
         [data-theme='dark'] { 
             --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; --border: #666;
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 15px; font-size: 12px; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 15px; font-size: 12px; transition: 0.3s; overflow: hidden; }
         
         .main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1000px; margin: 0 auto; }
         
-        .fixed-dashboard { position: sticky; top: 15px; width: 220px; display: flex; flex-direction: column; gap: 10px; }
-        .viewer-card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); text-align: center; }
+        /* 좌측 고정 대시보드 */
+        .fixed-dashboard { position: sticky; top: 15px; width: 220px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .viewer-card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); text-align: center; }
         
-        .mission-score { font-size: 42px; font-weight: 900; color: var(--accent); margin: 5px 0; }
+        .mission-score { font-size: 42px; font-weight: 900; color: var(--primary); margin: 5px 0; }
         
+        /* 우측 게임 영역 */
         .content-area { flex: 1; display: flex; flex-direction: column; gap: 10px; }
         
-        .setting-box { background: var(--card); padding: 10px 15px; border-radius: 10px; border: 2px solid var(--border); }
+        .setting-box { background: var(--card); padding: 12px 15px; border-radius: 10px; border: 2px solid var(--border); }
         .setting-flex { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         
+        /* 10x10 그리드 */
         .bingo-grid { 
             display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; 
             background: var(--card); padding: 8px; border-radius: 12px; border: 2px solid var(--border);
@@ -38,12 +41,13 @@
         
         .cell.active { background: var(--primary) !important; color: white !important; border-color: rgba(0,0,0,0.2); }
 
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; margin-bottom: 5px; border: 2px solid var(--border); }
+        .btn { width: 100%; padding: 11px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; margin-bottom: 5px; border: 2px solid var(--border); transition: 0.2s; }
         .btn-copy { background: #27ae60; color: white; }
         .btn-lobby { background: #444; color: white; }
         .btn-reset { background: #d32f2f; color: white; }
+        .btn:hover { opacity: 0.8; transform: translateY(-1px); }
         
-        input[type="color"] { cursor: pointer; border: none; width: 25px; height: 25px; background: none; vertical-align: middle; }
+        input[type="color"] { cursor: pointer; border: none; width: 26px; height: 26px; background: none; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -51,9 +55,9 @@
 <div class="main-layout">
     <div class="fixed-dashboard">
         <div class="viewer-card">
-            <div style="font-weight:bold; color:#888; font-size:11px;">MISSION PROGRESS</div>
+            <div style="font-weight:bold; color:#888; font-size:11px; letter-spacing: 1px;">MISSION PROGRESS</div>
             <div class="mission-score"><span id="filledCount">0</span> / <span id="remainCount">100</span></div>
-            <div style="font-weight:bold; color:#666;">채운 칸 / 남은 칸</div>
+            <div style="font-weight:bold; color:#666; font-size:12px;">채운 칸 / 남은 칸</div>
         </div>
         
         <button class="btn btn-copy" onclick="copyRoomLink()">🔗 초대 링크 복사</button>
@@ -67,8 +71,8 @@
                 <div>
                     🎨 테마: <input type="color" id="themeColor" value="#ff4d4d" onchange="changeTheme(this.value)">
                 </div>
-                <div style="font-size:11px; color: var(--primary);">
-                    클릭 시 상하좌우가 함께 터집니다 (누적 토글).
+                <div style="font-size:12px; color: var(--primary); font-weight: 800;">
+                    클릭 시 상하좌우가 함께 터집니다.
                 </div>
             </div>
         </div>
@@ -100,40 +104,39 @@
         cells.push(cell);
     }
 
-    // [핵심 수정] 누적 토글 로직 구현
+    // [로직 완전 수정] 십자 범위 내 기존 켜진 칸 유지 로직
     async function handleCellClick(index) {
         const docSnap = await getDoc(roomRef);
         let currentActive = [];
-        let theme = "#ff4d4d";
+        let currentTheme = "#ff4d4d";
 
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            currentActive = data.activeCells || [];
-            theme = data.themeColor || "#ff4d4d";
+            currentActive = docSnap.data().activeCells || [];
+            currentTheme = docSnap.data().themeColor || "#ff4d4d";
         }
 
         const row = Math.floor(index / 10);
         const col = index % 10;
-        const targets = [index]; // 클릭한 칸
+        
+        // 1. 이미 켜진 칸을 직접 클릭한 경우 -> 해당 칸만 단독 해제
+        if (currentActive.includes(index)) {
+            const newActive = currentActive.filter(v => v !== index);
+            await setDoc(roomRef, { activeCells: newActive, themeColor: currentTheme });
+            return;
+        }
+
+        // 2. 꺼진 칸을 클릭한 경우 -> 십자 범위 폭발 (기존 켜진 칸은 상태 유지)
+        const targets = [index]; 
         if (row > 0) targets.push(index - 10); // 상
         if (row < 9) targets.push(index + 10); // 하
         if (col > 0) targets.push(index - 1);  // 좌
         if (col < 9) targets.push(index + 1);  // 우
 
-        // 기존 목록을 복사하여 사용
-        let newActive = [...currentActive];
+        // Set을 사용하여 기존에 켜져 있던 번호들과 targets를 합침 (중복 자동 제거 및 기존 상태 유지)
+        const combined = new Set([...currentActive, ...targets]);
+        const newActiveArray = Array.from(combined);
 
-        targets.forEach(t => {
-            // [토글 핵심] 이미 목록에 있으면 제거(꺼짐), 없으면 추가(켜짐)
-            if (newActive.includes(t)) {
-                newActive = newActive.filter(v => v !== t);
-            } else {
-                newActive.push(t);
-            }
-        });
-
-        // 겹치는 구간 문제 해결된 새로운 목록으로 업데이트
-        await setDoc(roomRef, { activeCells: newActive, themeColor: theme }, { merge: true });
+        await setDoc(roomRef, { activeCells: newActiveArray, themeColor: currentTheme }, { merge: true });
     }
 
     // 실시간 동기화
@@ -151,20 +154,16 @@
             if (activeList.includes(i)) cell.classList.add('active');
             else cell.classList.remove('active');
         });
-        updateStatus(activeList);
-    });
-
-    // 현황판 업데이트 (칸수 기준)
-    function updateStatus(activeList) {
+        
+        // 상단 현황판 업데이트
         const filled = activeList.length;
-        const remain = 100 - filled;
         document.getElementById('filledCount').innerText = filled;
-        document.getElementById('remainCount').innerText = remain;
-    }
+        document.getElementById('remainCount').innerText = 100 - filled;
+    });
 
     window.changeTheme = async (color) => { await updateDoc(roomRef, { themeColor: color }); };
     window.copyRoomLink = () => { navigator.clipboard.writeText(window.location.href).then(() => alert("초대 링크 복사 완료!")); };
-    window.resetBingo = async () => { if (confirm("빙고판을 초기화할까요?")) await setDoc(roomRef, { activeCells: [], themeColor: "#ff4d4d" }); };
+    window.resetBingo = async () => { if (confirm("100칸을 모두 초기화할까요?")) await setDoc(roomRef, { activeCells: [], themeColor: "#ff4d4d" }); };
 </script>
 </body>
 </html>
