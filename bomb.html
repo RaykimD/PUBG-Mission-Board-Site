@@ -2,86 +2,183 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>폭탄빙고 - 배그 미션</title>
+    <title>폭탄빙고 10x10 - 커스텀 에디션</title>
     <style>
-        :root { --bg: #f8f9fa; --card: #ffffff; --text: #212529; --bomb: #ff4444; --btn: #444; }
-        [data-theme='dark'] { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --bomb: #ff6b6b; --btn: #333; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; }
-        .container { max-width: 500px; margin: 10px auto; padding: 10px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .room-tag { background: var(--bomb); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
-        .status-box { margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px; font-weight: bold; font-size: 14px; }
-        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
-        .card { aspect-ratio: 1/1; background: var(--card); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); transition: 0.1s; }
-        .card.exploded { background: var(--bomb) !important; color: white; border: none; font-size: 14px; }
-        .action-btn { width: 100%; padding: 12px; margin-top: 20px; background: var(--bomb); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        :root { 
+            --bg: #fdfdfd; --card: #ffffff; --text: #333; 
+            --primary: #ff4d4d;
+            --border: #444;
+        }
+        [data-theme='dark'] { 
+            --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; 
+            --border: #666;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 15px; font-size: 12px; transition: 0.3s; }
+        
+        .main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1400px; margin: 0 auto; }
+        
+        .fixed-dashboard { position: sticky; top: 15px; width: 260px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .viewer-card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); text-align: center; }
+        
+        .header-title { font-weight: bold; color: #888; font-size: 11px; letter-spacing: 1px; margin-bottom: 5px; }
+        .bingo-count { font-size: 42px; font-weight: 900; color: var(--primary); margin: 10px 0; }
+        
+        .content-area { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        
+        .setting-box { background: var(--card); padding: 15px; border-radius: 12px; border: 2px solid var(--border); }
+        .setting-flex { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 10x10 그리드 설정 */
+        .bingo-grid { 
+            display: grid; 
+            grid-template-columns: repeat(10, 1fr); 
+            gap: 4px; 
+            background: var(--card); padding: 10px; border-radius: 15px; border: 2px solid var(--border);
+        }
+        .cell { 
+            aspect-ratio: 1/1; background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold;
+            cursor: pointer; transition: 0.15s; position: relative; overflow: hidden;
+            user-select: none;
+        }
+        [data-theme='dark'] .cell { background: #3d3d3e; border-color: #555; }
+        .cell:hover { transform: scale(1.05); border-color: var(--primary); z-index: 2; }
+        
+        .cell.active { background: var(--primary) !important; color: white !important; border-color: rgba(0,0,0,0.2); animation: pop 0.2s ease-out; }
+        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; margin-bottom: 5px; border: 2px solid var(--border); }
+        .btn-copy { background: #27ae60; color: white; }
+        .btn-lobby { background: #444; color: white; }
+        .btn-reset { background: #d32f2f; color: white; }
+        
+        .color-group { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        input[type="color"] { cursor: pointer; border: none; width: 30px; height: 30px; background: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <a href="index.html" style="text-decoration:none; color:var(--text); font-size:14px;">🏠 로비</a>
-            <div class="room-tag" id="roomDisplay">ROOM #----</div>
+
+<div class="main-layout">
+    <div class="fixed-dashboard">
+        <div class="viewer-card">
+            <div class="header-title">10x10 BINGO LINE</div>
+            <div class="bingo-count" id="bingoDisplay">0</div>
+            <div style="font-weight:bold; font-size:14px; color:#666;">현재 빙고 개수</div>
         </div>
-        <div class="status-box" id="countStatus">💥 터진 칸: 0 | 🧱 남은 칸: 100</div>
-        <div class="grid" id="grid"></div>
-        <button class="action-btn" onclick="resetBoard()">빙고 초기화</button>
+        
+        <button class="btn btn-copy" onclick="copyRoomLink()">🔗 초대 링크 복사</button>
+        <button class="btn btn-lobby" onclick="location.href='index.html'">🏠 로비로 돌아가기</button>
+        <button class="btn btn-reset" onclick="resetBingo()">🧹 빙고 초기화</button>
     </div>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
-        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
-        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
-        const urlParams = new URLSearchParams(window.location.search);
-        let roomId = urlParams.get('room');
-        if (!roomId) { roomId = Math.floor(1000 + Math.random() * 9000).toString(); window.location.search = `?room=${roomId}`; }
-        document.getElementById('roomDisplay').innerText = "ROOM #" + roomId;
-        const roomRef = doc(db, "bomb_rooms", roomId);
-        const gridEl = document.getElementById('grid'); const cards = [];
-        for (let i = 1; i <= 100; i++) {
-            const div = document.createElement('div'); div.className = 'card'; div.innerText = i;
-            div.onclick = () => clickBomb(i); gridEl.appendChild(div); cards[i] = div;
-        }
 
-        function getNeighbors(n) {
-            const res = [n];
-            if (n > 10) res.push(n - 10); if (n <= 90) res.push(n + 10);
-            if (n % 10 !== 1) res.push(n - 1); if (n % 10 !== 0) res.push(n + 1);
-            return res;
-        }
+    <div class="content-area">
+        <div class="setting-box">
+            <div class="setting-flex">
+                <div class="color-group">
+                    🎨 빙고 테마색: 
+                    <input type="color" id="themeColor" value="#ff4d4d" onchange="changeTheme(this.value)">
+                </div>
+                <div style="font-weight:bold; opacity:0.7;">
+                    100칸의 대규모 빙고! 클릭 시 십자(+) 방향으로 터집니다.
+                </div>
+            </div>
+        </div>
 
-        async function clickBomb(num) {
-            const docSnap = await getDoc(roomRef); if (!docSnap.exists()) await setDoc(roomRef, {});
-            const data = docSnap.data() || {};
+        <div class="bingo-grid" id="bingoGrid"></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
+    const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+    
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+    const roomId = new URLSearchParams(window.location.search).get('room') || "default_bomb_10";
+    const roomRef = doc(db, "bomb_rooms_10", roomId);
+
+    const gridEl = document.getElementById('bingoGrid');
+    const cells = [];
+
+    // 10x10 그리드 생성
+    for (let i = 0; i < 100; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.innerText = i + 1;
+        cell.onclick = () => handleCellClick(i);
+        gridEl.appendChild(cell);
+        cells.push(cell);
+    }
+
+    async function handleCellClick(index) {
+        const row = Math.floor(index / 10);
+        const col = index % 10;
+        const targets = [index];
+
+        if (row > 0) targets.push(index - 10);
+        if (row < 9) targets.push(index + 10);
+        if (col > 0) targets.push(index - 1);
+        if (col < 9) targets.push(index + 1);
+
+        // Firebase 데이터 직접 참조를 피하기 위해 스냅샷 대기 없이 업데이트
+        // (성능을 위해 현재 상태를 snapshot에서 가져옴)
+        onSnapshot(roomRef, (snap) => {
+            const data = snap.data() || {};
+            const currentActive = data.activeCells || [];
+            let newActive = [...currentActive];
             
-            if (data[`click_${num}`]) { // 클릭했던 칸을 다시 눌러 해제할 때
-                if (confirm(num + "번 폭탄을 해제하시겠습니까?")) {
-                    const updates = { [`click_${num}`]: deleteField() };
-                    await updateDoc(roomRef, updates);
-                }
-                return;
-            }
-            await updateDoc(roomRef, { [`click_${num}`]: true });
-        }
-
-        onSnapshot(roomRef, (snapshot) => {
-            const data = snapshot.data() || {};
-            const explodedSet = new Set();
-            Object.keys(data).forEach(key => {
-                if (key.startsWith('click_')) {
-                    const num = parseInt(key.split('_')[1]);
-                    getNeighbors(num).forEach(n => explodedSet.add(n));
-                }
+            targets.forEach(t => {
+                if (newActive.includes(t)) newActive = newActive.filter(v => v !== t);
+                else newActive.push(t);
             });
-            let count = 0;
-            for (let i = 1; i <= 100; i++) {
-                if (explodedSet.has(i)) { cards[i].classList.add('exploded'); cards[i].innerText = '💥'; count++; }
-                else { cards[i].classList.remove('exploded'); cards[i].innerText = i; }
-            }
-            document.getElementById('countStatus').innerText = `💥 터진 칸: ${count} | 🧱 남은 칸: ${100 - count}`;
+            
+            updateDoc(roomRef, { activeCells: newActive });
+        }, { once: true });
+    }
+
+    onSnapshot(roomRef, (snap) => {
+        const data = snap.data(); if (!data) return;
+        if (data.themeColor) {
+            document.documentElement.style.setProperty('--primary', data.themeColor);
+            document.getElementById('themeColor').value = data.themeColor;
+        }
+        const activeList = data.activeCells || [];
+        cells.forEach((cell, i) => {
+            if (activeList.includes(i)) cell.classList.add('active');
+            else cell.classList.remove('active');
         });
-        window.resetBoard = async () => { if(confirm("초기화?")) await setDoc(roomRef, {}); };
-    </script>
+        calculateBingo(activeList);
+    });
+
+    function calculateBingo(activeList) {
+        let count = 0;
+        const b = Array(100).fill(false);
+        activeList.forEach(idx => b[idx] = true);
+
+        for (let i = 0; i < 10; i++) {
+            // 가로
+            if (b.slice(i*10, i*10+10).every(v => v)) count++;
+            // 세로
+            let colCheck = true;
+            for(let j=0; j<10; j++) if(!b[i + j*10]) colCheck = false;
+            if(colCheck) count++;
+        }
+        // 대각선
+        let d1=true, d2=true;
+        for(let i=0; i<10; i++) {
+            if(!b[i*11]) d1=false;
+            if(!b[(i+1)*9]) d2=false;
+        }
+        if(d1) count++; if(d2) count++;
+
+        document.getElementById('bingoDisplay').innerText = count;
+    }
+
+    window.changeTheme = async (color) => { await setDoc(roomRef, { themeColor: color }, { merge: true }); };
+    window.copyRoomLink = () => { navigator.clipboard.writeText(window.location.href).then(() => alert("초대 링크 복사 완료!")); };
+    window.resetBingo = async () => { if (confirm("100칸을 모두 초기화할까요?")) await setDoc(roomRef, { activeCells: [], themeColor: "#ff4d4d" }); };
+</script>
 </body>
 </html>
