@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>폭탄빙고 10x10</title>
+    <title>폭탄빙고 10x10 - 최종 통합본</title>
     <style>
         :root { --bg: #fdfdfd; --card: #ffffff; --text: #333; --primary: #ff4d4d; --border: #444; }
         [data-theme='dark'] { --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; --border: #666; }
@@ -10,31 +10,22 @@
         
         .main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1200px; margin: 0 auto; height: 95vh; }
         
-        /* 좌측 대시보드 */
         .fixed-dashboard { width: 240px; display: flex; flex-direction: column; gap: 10px; height: 100%; }
         .viewer-card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); text-align: center; }
         .mission-score { font-size: 42px; font-weight: 900; color: var(--primary); margin: 5px 0; }
         
-        /* [수정] 누적 로그 영역 디자인 */
         .log-container { flex: 1; background: #f1f1f1; border: 2px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
         [data-theme='dark'] .log-container { background: #000; }
         .log-header { background: var(--border); color: white; padding: 8px; font-weight: bold; text-align: center; font-size: 11px; }
         
-        .log-content { 
-            flex: 1; overflow-y: auto; padding: 10px; font-family: 'Consolas', monospace; 
-            font-size: 11px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px;
-        }
-        /* 스크롤바 커스텀 */
+        .log-content { flex: 1; overflow-y: auto; padding: 10px; font-family: 'Consolas', monospace; font-size: 11px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px; }
         .log-content::-webkit-scrollbar { width: 6px; }
         .log-content::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
-
         .log-item { border-bottom: 1px solid rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 4px; background: rgba(255,255,255,0.5); }
         [data-theme='dark'] .log-item { border-bottom-color: #333; background: rgba(255,255,255,0.05); }
-        
         .log-install { color: #e74c3c; font-weight: bold; border-left: 3px solid #e74c3c; }
         .log-remove { color: #2ecc71; font-weight: bold; border-left: 3px solid #2ecc71; }
 
-        /* 중앙 게임 영역 */
         .content-area { flex: 1; display: flex; flex-direction: column; gap: 10px; height: 100%; }
         .setting-box { background: var(--card); padding: 12px 15px; border-radius: 10px; border: 2px solid var(--border); }
         .setting-flex { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
@@ -67,8 +58,7 @@
 
         <div class="log-container">
             <div class="log-header">BOMB LOGS (Recent)</div>
-            <div class="log-content" id="logContent">
-                </div>
+            <div class="log-content" id="logContent"></div>
         </div>
 
         <button class="btn btn-reset" onclick="resetBingo()">🧹 빙고 초기화</button>
@@ -78,7 +68,7 @@
         <div class="setting-box">
             <div class="setting-flex">
                 <div>🎨 테마: <input type="color" id="themeColor" value="#ff4d4d" onchange="changeTheme(this.value)"></div>
-                <div style="font-size:12px; color: var(--primary); font-weight: 800;">💣 표시가 있는 칸을 누르면 폭탄이 해제됩니다.</div>
+                <div style="font-size:12px; color: var(--primary); font-weight: 800;">💣 표시가 있는 칸을 누르면 폭발이 해제됩니다.</div>
             </div>
         </div>
         <div class="bingo-grid" id="bingoGrid"></div>
@@ -87,7 +77,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
     const app = initializeApp(firebaseConfig); const db = getFirestore(app);
@@ -102,7 +92,7 @@
 
     for (let i = 0; i < 100; i++) {
         const cell = document.createElement('div');
-        cell.className = 'cell'; cell.innerHTML = `<span class="num">${i + 1}</span>`;
+        cell.className = 'cell'; cell.innerHTML = `<span>${i + 1}</span>`;
         cell.onclick = () => handleCellClick(i);
         gridEl.appendChild(cell); cells.push(cell);
     }
@@ -113,24 +103,25 @@
         try {
             const docSnap = await getDoc(roomRef);
             let bombHistory = {};
+            let currentLogs = [];
             let theme = "#ff4d4d";
-            let newLog = "";
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 bombHistory = data.bombHistory || {};
+                currentLogs = data.logs || [];
                 theme = data.themeColor || "#ff4d4d";
             }
 
             const cellNum = index + 1;
             const timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            
+            let newLog = "";
+
             if (bombHistory[index]) {
                 delete bombHistory[index];
                 newLog = `[${timeStr}] ${cellNum}번 해제`;
             } else {
-                const row = Math.floor(index / 10);
-                const col = index % 10;
+                const row = Math.floor(index / 10), col = index % 10;
                 const targets = [index];
                 if (row > 0) targets.push(index - 10);
                 if (row < 9) targets.push(index + 10);
@@ -146,18 +137,15 @@
             await setDoc(roomRef, { 
                 activeCells: Array.from(allActive), 
                 bombHistory: bombHistory, 
-                themeColor: theme
-            }, { merge: true });
-            
-            // 로그 배열에 추가
-            await updateDoc(roomRef, { logs: arrayUnion(newLog) });
+                themeColor: theme,
+                logs: [...currentLogs, newLog]
+            });
 
         } catch (e) { console.error(e); } finally { isProcessing = false; }
     }
 
     onSnapshot(roomRef, (snap) => {
         const data = snap.data(); if (!data) return;
-        
         if (data.themeColor) document.documentElement.style.setProperty('--primary', data.themeColor);
         const activeList = data.activeCells || [];
         const bombOrigins = data.bombHistory || {};
@@ -174,23 +162,20 @@
             } else if (existingBomb) { existingBomb.remove(); }
         });
 
-        // [핵심] 로그 누적 출력 로직
         const logContent = document.getElementById('logContent');
         if (data.logs) {
-            // 최신 로그가 위로 오도록 역순(reverse) 정렬
-            logContent.innerHTML = data.logs.slice().reverse().map(log => {
+            logContent.innerHTML = data.logs.slice().reverse().slice(0, 50).map(log => {
                 const isInstall = log.includes('설치');
                 return `<div class="log-item ${isInstall ? 'log-install' : 'log-remove'}">${log}</div>`;
             }).join('');
         }
-
         document.getElementById('filledCount').innerText = activeList.length;
         document.getElementById('remainCount').innerText = 100 - activeList.length;
     });
 
-    window.changeTheme = async (color) => { await setDoc(roomRef, { themeColor: color }, { merge: true }); };
+    window.changeTheme = async (color) => { await updateDoc(roomRef, { themeColor: color }); };
     window.copyRoomLink = () => { navigator.clipboard.writeText(window.location.href).then(() => alert("초대 링크 복사 완료!")); };
-    window.resetBingo = async () => { if (confirm("모든 데이터를 초기화할까요?")) await setDoc(roomRef, { activeCells: [], bombHistory: {}, logs: [], themeColor: "#ff4d4d" }); };
+    window.resetBingo = async () => { if (confirm("데이터를 초기화할까요?")) await setDoc(roomRef, { activeCells: [], bombHistory: {}, logs: [], themeColor: "#ff4d4d" }); };
 </script>
 </body>
 </html>
