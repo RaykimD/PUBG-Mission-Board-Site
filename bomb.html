@@ -2,78 +2,83 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>폭탄빙고 10x10</title>
+    <title>폭탄빙고 10x10 - 누적 로그 에디션</title>
     <style>
-        :root { 
-            --bg: #fdfdfd; --card: #ffffff; --text: #333; 
-            --primary: #ff4d4d; --border: #444;
-        }
-        [data-theme='dark'] { 
-            --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; --border: #666;
-        }
+        :root { --bg: #fdfdfd; --card: #ffffff; --text: #333; --primary: #ff4d4d; --border: #444; }
+        [data-theme='dark'] { --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; --border: #666; }
         body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 15px; font-size: 12px; transition: 0.3s; overflow: hidden; }
         
-        .main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1000px; margin: 0 auto; }
+        .main-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1200px; margin: 0 auto; height: 95vh; }
         
-        /* 좌측 고정 대시보드 */
-        .fixed-dashboard { position: sticky; top: 15px; width: 220px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        /* 좌측 대시보드 */
+        .fixed-dashboard { width: 240px; display: flex; flex-direction: column; gap: 10px; height: 100%; }
         .viewer-card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); text-align: center; }
-        
         .mission-score { font-size: 42px; font-weight: 900; color: var(--primary); margin: 5px 0; }
         
-        /* 우측 게임 영역 */
-        .content-area { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        /* [수정] 누적 로그 영역 디자인 */
+        .log-container { flex: 1; background: #f1f1f1; border: 2px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+        [data-theme='dark'] .log-container { background: #000; }
+        .log-header { background: var(--border); color: white; padding: 8px; font-weight: bold; text-align: center; font-size: 11px; }
         
+        .log-content { 
+            flex: 1; overflow-y: auto; padding: 10px; font-family: 'Consolas', monospace; 
+            font-size: 11px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px;
+        }
+        /* 스크롤바 커스텀 */
+        .log-content::-webkit-scrollbar { width: 6px; }
+        .log-content::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+
+        .log-item { border-bottom: 1px solid rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 4px; background: rgba(255,255,255,0.5); }
+        [data-theme='dark'] .log-item { border-bottom-color: #333; background: rgba(255,255,255,0.05); }
+        
+        .log-install { color: #e74c3c; font-weight: bold; border-left: 3px solid #e74c3c; }
+        .log-remove { color: #2ecc71; font-weight: bold; border-left: 3px solid #2ecc71; }
+
+        /* 중앙 게임 영역 */
+        .content-area { flex: 1; display: flex; flex-direction: column; gap: 10px; height: 100%; }
         .setting-box { background: var(--card); padding: 12px 15px; border-radius: 10px; border: 2px solid var(--border); }
         .setting-flex { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         
-        /* 10x10 그리드 */
-        .bingo-grid { 
-            display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; 
-            background: var(--card); padding: 8px; border-radius: 12px; border: 2px solid var(--border);
-        }
-        .cell { 
-            aspect-ratio: 1/1; background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px;
-            display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;
-            cursor: pointer; transition: 0.1s; user-select: none;
-        }
+        .bingo-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; background: var(--card); padding: 8px; border-radius: 12px; border: 2px solid var(--border); }
+        .cell { aspect-ratio: 1/1; background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.1s; user-select: none; position: relative; }
         [data-theme='dark'] .cell { background: #3d3d3e; border-color: #555; }
+        .cell.active { background: var(--primary) !important; color: white !important; }
         
-        .cell.active { background: var(--primary) !important; color: white !important; border-color: rgba(0,0,0,0.2); }
+        .bomb-icon { position: absolute; font-size: 14px; top: -3px; left: -3px; z-index: 10; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3)); }
 
-        .btn { width: 100%; padding: 11px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; margin-bottom: 5px; border: 2px solid var(--border); transition: 0.2s; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; border: 2px solid var(--border); transition: 0.2s; }
         .btn-copy { background: #27ae60; color: white; }
         .btn-lobby { background: #444; color: white; }
-        .btn-reset { background: #d32f2f; color: white; }
-        .btn:hover { opacity: 0.8; transform: translateY(-1px); }
-        
+        .btn-reset { background: #d32f2f; color: white; margin-top: auto; }
         input[type="color"] { cursor: pointer; border: none; width: 26px; height: 26px; background: none; vertical-align: middle; }
     </style>
 </head>
 <body>
-
 <div class="main-layout">
     <div class="fixed-dashboard">
         <div class="viewer-card">
-            <div style="font-weight:bold; color:#888; font-size:11px; letter-spacing: 1px;">MISSION PROGRESS</div>
+            <div style="font-weight:bold; color:#888; font-size:11px;">MISSION PROGRESS</div>
             <div class="mission-score"><span id="filledCount">0</span> / <span id="remainCount">100</span></div>
             <div style="font-weight:bold; color:#666; font-size:12px;">채운 칸 / 남은 칸</div>
         </div>
         
         <button class="btn btn-copy" onclick="copyRoomLink()">🔗 초대 링크 복사</button>
         <button class="btn btn-lobby" onclick="location.href='index.html'">🏠 로비로 돌아가기</button>
+
+        <div class="log-container">
+            <div class="log-header">BOMB LOGS (Recent)</div>
+            <div class="log-content" id="logContent">
+                </div>
+        </div>
+
         <button class="btn btn-reset" onclick="resetBingo()">🧹 빙고 초기화</button>
     </div>
 
     <div class="content-area">
         <div class="setting-box">
             <div class="setting-flex">
-                <div>
-                    🎨 테마: <input type="color" id="themeColor" value="#ff4d4d" onchange="changeTheme(this.value)">
-                </div>
-                <div style="font-size:12px; color: var(--primary); font-weight: 800;">
-                    클릭 시 상하좌우가 함께 터집니다.
-                </div>
+                <div>🎨 테마: <input type="color" id="themeColor" value="#ff4d4d" onchange="changeTheme(this.value)"></div>
+                <div style="font-size:12px; color: var(--primary); font-weight: 800;">💣 표시가 있는 칸을 누르면 폭탄이 해제됩니다.</div>
             </div>
         </div>
         <div class="bingo-grid" id="bingoGrid"></div>
@@ -82,7 +87,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
     const app = initializeApp(firebaseConfig); const db = getFirestore(app);
@@ -93,77 +98,99 @@
 
     const gridEl = document.getElementById('bingoGrid');
     const cells = [];
+    let isProcessing = false;
 
-    // 10x10 그리드 생성
     for (let i = 0; i < 100; i++) {
         const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.innerText = i + 1;
+        cell.className = 'cell'; cell.innerHTML = `<span class="num">${i + 1}</span>`;
         cell.onclick = () => handleCellClick(i);
-        gridEl.appendChild(cell);
-        cells.push(cell);
+        gridEl.appendChild(cell); cells.push(cell);
     }
 
-    // [로직 완전 수정] 십자 범위 내 기존 켜진 칸 유지 로직
     async function handleCellClick(index) {
-        const docSnap = await getDoc(roomRef);
-        let currentActive = [];
-        let currentTheme = "#ff4d4d";
+        if (isProcessing) return;
+        isProcessing = true;
+        try {
+            const docSnap = await getDoc(roomRef);
+            let bombHistory = {};
+            let theme = "#ff4d4d";
+            let newLog = "";
 
-        if (docSnap.exists()) {
-            currentActive = docSnap.data().activeCells || [];
-            currentTheme = docSnap.data().themeColor || "#ff4d4d";
-        }
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                bombHistory = data.bombHistory || {};
+                theme = data.themeColor || "#ff4d4d";
+            }
 
-        const row = Math.floor(index / 10);
-        const col = index % 10;
-        
-        // 1. 이미 켜진 칸을 직접 클릭한 경우 -> 해당 칸만 단독 해제
-        if (currentActive.includes(index)) {
-            const newActive = currentActive.filter(v => v !== index);
-            await setDoc(roomRef, { activeCells: newActive, themeColor: currentTheme });
-            return;
-        }
+            const cellNum = index + 1;
+            const timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            if (bombHistory[index]) {
+                delete bombHistory[index];
+                newLog = `[${timeStr}] ${cellNum}번 해제`;
+            } else {
+                const row = Math.floor(index / 10);
+                const col = index % 10;
+                const targets = [index];
+                if (row > 0) targets.push(index - 10);
+                if (row < 9) targets.push(index + 10);
+                if (col > 0) targets.push(index - 1);
+                if (col < 9) targets.push(index + 1);
+                bombHistory[index] = targets;
+                newLog = `[${timeStr}] ${cellNum}번 설치`;
+            }
 
-        // 2. 꺼진 칸을 클릭한 경우 -> 십자 범위 폭발 (기존 켜진 칸은 상태 유지)
-        const targets = [index]; 
-        if (row > 0) targets.push(index - 10); // 상
-        if (row < 9) targets.push(index + 10); // 하
-        if (col > 0) targets.push(index - 1);  // 좌
-        if (col < 9) targets.push(index + 1);  // 우
+            const allActive = new Set();
+            Object.values(bombHistory).forEach(range => range.forEach(idx => allActive.add(idx)));
 
-        // Set을 사용하여 기존에 켜져 있던 번호들과 targets를 합침 (중복 자동 제거 및 기존 상태 유지)
-        const combined = new Set([...currentActive, ...targets]);
-        const newActiveArray = Array.from(combined);
+            await setDoc(roomRef, { 
+                activeCells: Array.from(allActive), 
+                bombHistory: bombHistory, 
+                themeColor: theme
+            }, { merge: true });
+            
+            // 로그 배열에 추가
+            await updateDoc(roomRef, { logs: arrayUnion(newLog) });
 
-        await setDoc(roomRef, { activeCells: newActiveArray, themeColor: currentTheme }, { merge: true });
+        } catch (e) { console.error(e); } finally { isProcessing = false; }
     }
 
-    // 실시간 동기화
     onSnapshot(roomRef, (snap) => {
-        const data = snap.data();
-        if (!data) return;
+        const data = snap.data(); if (!data) return;
+        
+        if (data.themeColor) document.documentElement.style.setProperty('--primary', data.themeColor);
+        const activeList = data.activeCells || [];
+        const bombOrigins = data.bombHistory || {};
+        
+        cells.forEach((cell, i) => {
+            cell.classList.toggle('active', activeList.includes(i));
+            let existingBomb = cell.querySelector('.bomb-icon');
+            if (bombOrigins[i]) {
+                if (!existingBomb) {
+                    const icon = document.createElement('span');
+                    icon.className = 'bomb-icon'; icon.innerText = '💣';
+                    cell.appendChild(icon);
+                }
+            } else if (existingBomb) { existingBomb.remove(); }
+        });
 
-        if (data.themeColor) {
-            document.documentElement.style.setProperty('--primary', data.themeColor);
-            document.getElementById('themeColor').value = data.themeColor;
+        // [핵심] 로그 누적 출력 로직
+        const logContent = document.getElementById('logContent');
+        if (data.logs) {
+            // 최신 로그가 위로 오도록 역순(reverse) 정렬
+            logContent.innerHTML = data.logs.slice().reverse().map(log => {
+                const isInstall = log.includes('설치');
+                return `<div class="log-item ${isInstall ? 'log-install' : 'log-remove'}">${log}</div>`;
+            }).join('');
         }
 
-        const activeList = data.activeCells || [];
-        cells.forEach((cell, i) => {
-            if (activeList.includes(i)) cell.classList.add('active');
-            else cell.classList.remove('active');
-        });
-        
-        // 상단 현황판 업데이트
-        const filled = activeList.length;
-        document.getElementById('filledCount').innerText = filled;
-        document.getElementById('remainCount').innerText = 100 - filled;
+        document.getElementById('filledCount').innerText = activeList.length;
+        document.getElementById('remainCount').innerText = 100 - activeList.length;
     });
 
-    window.changeTheme = async (color) => { await updateDoc(roomRef, { themeColor: color }); };
+    window.changeTheme = async (color) => { await setDoc(roomRef, { themeColor: color }, { merge: true }); };
     window.copyRoomLink = () => { navigator.clipboard.writeText(window.location.href).then(() => alert("초대 링크 복사 완료!")); };
-    window.resetBingo = async () => { if (confirm("100칸을 모두 초기화할까요?")) await setDoc(roomRef, { activeCells: [], themeColor: "#ff4d4d" }); };
+    window.resetBingo = async () => { if (confirm("모든 데이터를 초기화할까요?")) await setDoc(roomRef, { activeCells: [], bombHistory: {}, logs: [], themeColor: "#ff4d4d" }); };
 </script>
 </body>
 </html>
