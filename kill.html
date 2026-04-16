@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>벽킬내기</title>
+    <style>
+        :root { 
+            --bg: #fdfdfd; --card: #ffffff; --text: #333; 
+            --p1: #ffadad; --p2: #ffd6a5; --p3: #caffbf; --p4: #9bf6ff;
+            --accent: #4d94ff;
+        }
+        [data-theme='dark'] { 
+            --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; 
+            --p1: #8c4444; --p2: #8c6a44; --p3: #448c5a; --p4: #447a8c;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 15px; font-size: 12px; }
+        
+        .main-layout { display: flex; gap: 20px; align-items: flex-start; }
+        
+        /* 좌측 고정 대시보드 */
+        .fixed-dashboard { position: sticky; top: 15px; width: 280px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .viewer-card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #666; }
+        .main-score { font-size: 36px; font-weight: 900; color: var(--accent); margin: 10px 0; }
+        
+        .player-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-weight: 800; border: 2px solid #444; }
+        .p-score-detail { font-size: 13px; letter-spacing: -0.5px; }
+
+        .bar-bg { height: 30px; background: #eee; border-radius: 15px; overflow: hidden; display: flex; position: relative; margin: 12px 0; border: 2px solid #444; }
+        .bar-segment { height: 100%; transition: width 0.5s ease; }
+        .bar-label { position: absolute; width: 100%; text-align: center; line-height: 30px; font-weight: 900; color: #000; z-index: 10; font-size: 15px; }
+
+        /* 우측 시트 영역 */
+        .content-area { flex: 1; min-width: 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--card); table-layout: fixed; margin-bottom: 10px; border: 2px solid #444; }
+        th, td { border: 1px solid #444; padding: 6px; text-align: center; position: relative; }
+        th { background: #f0f0f0; color: #333; font-weight: 900; }
+
+        /* 입력창 디자인 개선: 테두리 제거 및 가독성 향상 */
+        input[type="number"], input[type="text"] { 
+            width: 100%; border: none; padding: 6px 0; text-align: center; 
+            background: transparent; color: inherit; font-weight: 700; font-size: 13px;
+        }
+        input:focus { background: rgba(255,255,255,0.5); outline: none; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        
+        /* 컬러 피커 아이콘 */
+        .color-picker-btn { border: none; background: none; cursor: pointer; font-size: 14px; padding: 0; vertical-align: middle; margin-left: 3px; }
+        .hidden-picker { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+
+        /* 맵별 고유 배경색 */
+        .map-cell { transition: background 0.3s; }
+        .map-erangel { background-color: #e8f5e9 !important; color: #2e7d32 !important; }
+        .map-miramar { background-color: #fff3e0 !important; color: #d84315 !important; }
+        .map-sanhok { background-color: #e0f2f1 !important; color: #00695c !important; }
+        .map-taego { background-color: #e3f2fd !important; color: #1565c0 !important; }
+        .map-vikendi { background-color: #eceff1 !important; color: #455a64 !important; }
+        .map-rondo { background-color: #f3e5f5 !important; color: #6a1b9a !important; }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; margin-bottom: 5px; border: 2px solid #444; }
+        .btn-lobby { background: #444; color: white; }
+        .btn-reset { background: #ff4d4d; color: white; }
+        .btn-add { background: #fff; border: 2px dashed #999; color: #666; margin-top: 10px; font-size: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="main-layout">
+    <div class="fixed-dashboard">
+        <div class="viewer-card">
+            <div style="font-weight:bold; color:#666; font-size:11px; letter-spacing:1px;">MISSION PROGRESS</div>
+            <div class="main-score"><span id="v-total">0</span> / <span id="v-target">100</span></div>
+            
+            <div class="bar-bg">
+                <div id="bar-1" class="bar-segment" style="background:var(--p1); width:0%"></div>
+                <div id="bar-2" class="bar-segment" style="background:var(--p2); width:0%"></div>
+                <div id="bar-3" class="bar-segment" style="background:var(--p3); width:0%"></div>
+                <div id="bar-4" class="bar-segment" style="background:var(--p4); width:0%"></div>
+                <div class="bar-label" id="v-percent">0%</div>
+            </div>
+
+            <div id="player-summaries">
+                <div class="player-stat-row" style="background:var(--p1)"> <span class="n-1">P1</span> <span id="s-1" class="p-score-detail">0 (0-0)</span> </div>
+                <div class="player-stat-row" style="background:var(--p2)"> <span class="n-2">P2</span> <span id="s-2" class="p-score-detail">0 (0-0)</span> </div>
+                <div class="player-stat-row" style="background:var(--p3)"> <span class="n-3">P3</span> <span id="s-3" class="p-score-detail">0 (0-0)</span> </div>
+                <div class="player-stat-row" style="background:var(--p4)"> <span class="n-4">P4</span> <span id="s-4" class="p-score-detail">0 (0-0)</span> </div>
+            </div>
+            
+            <div style="margin-top:15px; font-weight:900; font-size:14px; display:flex; justify-content:space-between; border-top:2px solid #444; padding-top:10px;">
+                <span>🍗 치킨: <span id="v-wins" style="color:#2e7d32;">0</span>회</span>
+                <span style="color:#d32f2f;">남은: <span id="v-remain">100</span></span>
+            </div>
+        </div>
+        
+        <button class="btn btn-lobby" onclick="location.href='index.html'">🏠 로비로 돌아가기</button>
+        <button class="btn btn-reset" onclick="resetSheet()">🧹 시트지 초기화</button>
+    </div>
+
+    <div class="content-area">
+        <div class="setting-table">
+            <table>
+                <tr>
+                    <th width="80">설정</th>
+                    <th style="background:var(--p1)">
+                        <input type="text" id="name-1" value="P1" onchange="updateAll()">
+                        <button class="color-picker-btn" onclick="document.getElementById('cp-1').click()">🎨</button>
+                        <input type="color" id="cp-1" class="hidden-picker" value="#ffadad" onchange="changeColor(1, this.value)">
+                    </th>
+                    <th style="background:var(--p2)">
+                        <input type="text" id="name-2" value="P2" onchange="updateAll()">
+                        <button class="color-picker-btn" onclick="document.getElementById('cp-2').click()">🎨</button>
+                        <input type="color" id="cp-2" class="hidden-picker" value="#ffd6a5" onchange="changeColor(2, this.value)">
+                    </th>
+                    <th style="background:var(--p3)">
+                        <input type="text" id="name-3" value="P3" onchange="updateAll()">
+                        <button class="color-picker-btn" onclick="document.getElementById('cp-3').click()">🎨</button>
+                        <input type="color" id="cp-3" class="hidden-picker" value="#caffbf" onchange="changeColor(3, this.value)">
+                    </th>
+                    <th style="background:var(--p4)">
+                        <input type="text" id="name-4" value="P4" onchange="updateAll()">
+                        <button class="color-picker-btn" onclick="document.getElementById('cp-4').click()">🎨</button>
+                        <input type="color" id="cp-4" class="hidden-picker" value="#9bf6ff" onchange="changeColor(4, this.value)">
+                    </th>
+                    <th width="180">목표 점수 & 치킨 점수</th>
+                </tr>
+                <tr>
+                    <td>데스</td>
+                    <td><input type="number" id="die-1" style="width:40px;" value="3" onchange="updateAll()"></td>
+                    <td><input type="number" id="die-2" style="width:40px;" value="2" onchange="updateAll()"></td>
+                    <td><input type="number" id="die-3" style="width:40px;" value="1" onchange="updateAll()"></td>
+                    <td><input type="number" id="die-4" style="width:40px;" value="0" onchange="updateAll()"></td>
+                    <td style="text-align:left; padding-left:10px;">
+                        목표: <input type="number" id="targetInput" style="width:60px; font-weight:900;" value="100" onchange="updateAll()"><br>
+                        배틀: <input type="number" id="winBig" style="width:45px;" value="8" onchange="updateAll()"> 
+                        미니: <input type="number" id="winSmall" style="width:45px;" value="5" onchange="updateAll()">
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <table id="mainSheet">
+            <thead>
+                <tr>
+                    <th width="40">R</th>
+                    <th width="100">맵</th>
+                    <th colspan="2" style="background:var(--p1)" class="n-1">P1</th>
+                    <th colspan="2" style="background:var(--p2)" class="n-2">P2</th>
+                    <th colspan="2" style="background:var(--p3)" class="n-3">P3</th>
+                    <th colspan="2" style="background:var(--p4)" class="n-4">P4</th>
+                    <th width="40">🍗</th>
+                    <th width="65">합계</th>
+                </tr>
+            </thead>
+            <tbody id="sheetBody"></tbody>
+        </table>
+        <button class="btn btn-add" onclick="addNewRow()">+ 라운드 추가 (Add Round)</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
+    const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+    const roomId = new URLSearchParams(window.location.search).get('room') || "default_kill";
+    const roomRef = doc(db, "kill_sheets", roomId);
+
+    let rowCount = 0;
+    const maps = [
+        { name: "에란겔", class: "map-erangel" }, { name: "미라마", class: "map-miramar" },
+        { name: "태이고", class: "map-taego" }, { name: "비켄디", class: "map-vikendi" },
+        { name: "론도", class: "map-rondo" }, { name: "데스턴", class: "map-taego" },
+        { name: "사녹", class: "map-sanhok" }, { name: "파라모", class: "map-sanhok" },
+        { name: "카라킨", class: "map-miramar" }
+    ];
+
+    function createRow(r) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${r}</td>
+            <td class="map-cell"><select id="map-${r}" onchange="updateMapStyle(${r}); updateAll();" style="width:100%; border:none; background:transparent; font-weight:bold; cursor:pointer;">
+                <option value="">선택</option>${maps.map(m=>`<option value="${m.name}">${m.name}</option>`).join('')}
+            </select></td>
+            ${[1,2,3,4].map(p => `
+                <td><input type="number" id="k-${r}-${p}" onchange="updateAll()"></td>
+                <td><input type="checkbox" id="d-${r}-${p}" onchange="updateAll()"></td>
+            `).join('')}
+            <td><input type="checkbox" id="w-${r}" onchange="updateAll()"></td>
+            <td id="total-${r}" style="font-weight:900; background:#f9f9f9; font-size:13px;">0</td>
+        `;
+        document.getElementById('sheetBody').appendChild(tr);
+        rowCount = r;
+    }
+
+    window.updateMapStyle = (r) => {
+        const sel = document.getElementById(`map-${r}`);
+        const cell = sel.parentElement;
+        cell.className = "map-cell";
+        const mapObj = maps.find(m => m.name === sel.value);
+        if (mapObj) cell.classList.add(mapObj.class);
+    };
+
+    window.changeColor = async (pIdx, color) => {
+        document.documentElement.style.setProperty(`--p${pIdx}`, color);
+        await updateAll();
+    };
+
+    for(let i=1; i<=30; i++) createRow(i);
+    window.addNewRow = () => createRow(rowCount + 1);
+
+    window.updateAll = async () => {
+        const settings = {
+            names: [1,2,3,4].map(i => document.getElementById('name-'+i).value),
+            colors: [1,2,3,4].map(i => getComputedStyle(document.documentElement).getPropertyValue(`--p${i}`).trim()),
+            dies: [1,2,3,4].map(i => Number(document.getElementById('die-'+i).value)),
+            target: Number(document.getElementById('targetInput').value),
+            winBig: Number(document.getElementById('winBig').value),
+            winSmall: Number(document.getElementById('winSmall').value)
+        };
+
+        let grandTotal = 0; let winCount = 0;
+        let pK = [0,0,0,0], pD = [0,0,0,0], pS = [0,0,0,0];
+        const rounds = {};
+
+        for(let r=1; r<=rowCount; r++) {
+            const map = document.getElementById(`map-${r}`).value;
+            if(!map) continue;
+            let rowS = 0; const pStats = [];
+            for(let p=1; p<=4; p++) {
+                const k = Number(document.getElementById(`k-${r}-${p}`).value || 0);
+                const d = document.getElementById(`d-${r}-${p}`).checked;
+                const score = k - (d ? settings.dies[p-1] : 0);
+                rowS += score; pS[p-1] += score; pK[p-1] += k; if(d) pD[p-1]++;
+                pStats.push({k, d});
+            }
+            if(document.getElementById(`w-${r}`).checked) {
+                winCount++; rowS += ["사녹","파라모","카라킨"].includes(map) ? settings.winSmall : settings.winBig;
+            }
+            document.getElementById(`total-${r}`).innerText = rowS;
+            grandTotal += rowS; rounds[`r${r}`] = { map, isWin: document.getElementById(`w-${r}`).checked, pStats, rowS };
+        }
+        await setDoc(roomRef, { settings, rounds, grandTotal, winCount, pK, pD, pS, rowCount }, { merge: true });
+    };
+
+    onSnapshot(roomRef, (snap) => {
+        const data = snap.data(); if(!data) return;
+        if(data.rowCount > rowCount) { for(let i=rowCount+1; i<=data.rowCount; i++) createRow(i); }
+        if(data.settings) {
+            data.settings.colors.forEach((c, i) => {
+                document.documentElement.style.setProperty(`--p${i+1}`, c);
+                document.getElementById(`cp-${i+1}`).value = c;
+            });
+            data.settings.names.forEach((n, i) => {
+                const input = document.getElementById(`name-${i+1}`);
+                if (document.activeElement !== input) input.value = n;
+                document.querySelectorAll(`.n-${i+1}`).forEach(el => el.innerText = n);
+            });
+            data.settings.dies.forEach((d, i) => document.getElementById(`die-${i+1}`).value = d);
+            document.getElementById('targetInput').value = data.settings.target;
+            document.getElementById('winBig').value = data.settings.winBig;
+            document.getElementById('winSmall').value = data.settings.winSmall;
+        }
+        if(data.rounds) {
+            for(let r=1; r<=rowCount; r++) {
+                const rd = data.rounds[`r${r}`]; if(!rd) continue;
+                document.getElementById(`map-${r}`).value = rd.map;
+                updateMapStyle(r);
+                document.getElementById(`w-${r}`).checked = rd.isWin;
+                rd.pStats.forEach((p, pi) => {
+                    const kIn = document.getElementById(`k-${r}-${pi+1}`);
+                    if (document.activeElement !== kIn) kIn.value = p.k || "";
+                    document.getElementById(`d-${r}-${pi+1}`).checked = p.d;
+                });
+                document.getElementById(`total-${r}`).innerText = rd.rowS;
+            }
+        }
+        document.getElementById('v-total').innerText = data.grandTotal || 0;
+        document.getElementById('v-target').innerText = data.settings?.target || 100;
+        const target = data.settings?.target || 100;
+        const pct = Math.min(100, Math.round(((data.grandTotal || 0) / target) * 100));
+        document.getElementById('v-percent').innerText = pct + "%";
+        document.getElementById('v-wins').innerText = data.winCount || 0;
+        document.getElementById('v-remain').innerText = Math.max(0, target - (data.grandTotal || 0));
+        
+        if(data.pS) data.pS.forEach((v, i) => {
+            const pPct = data.grandTotal > 0 ? Math.max(0, (v / target) * 100) : 0;
+            document.getElementById(`bar-${i+1}`).style.width = pPct + "%";
+            const penalty = data.pD[i] * data.settings.dies[i];
+            document.getElementById(`s-${i+1}`).innerText = `${v} (${data.pK[i]}-${penalty})`;
+        });
+    });
+
+    window.resetSheet = async () => { if(confirm("시트지를 완전히 초기화하시겠습니까?")) { await setDoc(roomRef, {}); location.reload(); } };
+</script>
+</body>
+</html>
