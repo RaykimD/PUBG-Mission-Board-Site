@@ -5,57 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>배그 미션 시트지 사이트</title>
     <style>
-        :root { --bg: #f8f9fa; --card-bg: #ffffff; --text: #212529; --primary: #ff4444; }
-        [data-theme='dark'] { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --primary: #ff4444; }
-        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; transition: 0.3s; }
+        :root { --bg: #f8f9fa; --card-bg: #ffffff; --text: #212529; --primary: #4d94ff; }
+        [data-theme='dark'] { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --primary: #3498db; }
+
+        body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; transition: 0.3s; }
         .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; text-align: center; }
+        
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; }
         .theme-toggle { cursor: pointer; padding: 10px 20px; border-radius: 20px; border: 1px solid var(--text); background: none; color: var(--text); font-weight: bold; }
-        .mission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
-        .mission-card { background: var(--card-bg); border-radius: 24px; padding: 40px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; border: 2px solid transparent; text-decoration: none; color: inherit; display: block; }
-        .mission-card:hover { transform: translateY(-10px); border-color: var(--primary); }
-        .mission-card.locked { opacity: 0.5; cursor: default; }
-        .icon { font-size: 3.5rem; margin-bottom: 20px; display: block; }
-        .m-title { font-size: 1.5rem; font-weight: 800; display: block; margin-bottom: 10px; }
-        footer { margin-top: 80px; padding: 40px 20px; opacity: 0.5; border-top: 1px solid rgba(0,0,0,0.1); }
+
+        h1 { font-size: 2.5rem; margin-bottom: 10px; word-break: keep-all; }
+        p.subtitle { opacity: 0.7; margin-bottom: 40px; word-break: keep-all; }
+
+        .mission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        
+        /* 카드 디자인 */
+        .mission-card { 
+            background: var(--card-bg); border-radius: 20px; padding: 30px 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s;
+            border: 2px solid transparent; text-decoration: none; color: inherit; display: block;
+        }
+        .mission-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 15px 40px rgba(77, 148, 255, 0.2); }
+        .mission-card.locked { opacity: 0.5; cursor: default; filter: grayscale(1); }
+
+        .icon { font-size: 3.5rem; margin-bottom: 15px; display: block; }
+        .m-title { font-size: 1.4rem; font-weight: 800; }
+        .m-desc { font-size: 0.85rem; opacity: 0.6; margin-top: 8px; display: block; }
+
+        footer { margin-top: 100px; padding: 20px; opacity: 0.5; border-top: 1px solid rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <div style="width: 80px;"></div>
-            <h1>🎯 배그 미션 시트지</h1>
-            <button class="theme-toggle" onclick="toggleTheme()">🌓 테마 변경</button>
+            <h1>🎯 배그 미션 플랫폼</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 테마 전환</button>
         </header>
+
+        <p class="subtitle">배틀그라운드 스트리머를 위한 실시간 미션 시트지 모음입니다.</p>
+
         <div class="mission-grid">
-            <a href="./bomb.html" class="mission-card">
+            <a href="#" onclick="createRoom('kill.html')" class="mission-card">
+                <span class="icon">🧱</span>
+                <span class="m-title">벽킬내기</span>
+                <span class="m-desc">실시간 점수 합산 및 방송용 지표 송출</span>
+            </a>
+
+            <a href="#" onclick="createRoom('bomb.html')" class="mission-card">
                 <span class="icon">💣</span>
                 <span class="m-title">폭탄빙고</span>
+                <span class="m-desc">십자 범위 폭발 연출과 빙고 미션</span>
             </a>
-            <a href="./land.html" class="mission-card">
+
+            <a href="#" onclick="createRoom('land.html')" class="mission-card">
                 <span class="icon">⛳</span>
                 <span class="m-title">땅따먹기</span>
+                <span class="m-desc">4개 팀의 치열한 영토 점령전</span>
             </a>
-            <a href="./gacha.html" class="mission-card">
+
+            <a href="#" onclick="createRoom('gacha.html')" class="mission-card">
                 <span class="icon">🎁</span>
                 <span class="m-title">가챠배그</span>
+                <span class="m-desc">시네마틱 연출과 전설 등급 가챠</span>
             </a>
+
             <div class="mission-card locked">
                 <span class="icon">🔒</span>
                 <span class="m-title">업데이트 예정</span>
+                <span class="m-desc">새로운 컨텐츠 준비 중</span>
             </div>
         </div>
-        <footer>Made by. 김쨔응</footer>
+
+        <footer>Made by. 김쨔응 | PUBG Mission Platform</footer>
     </div>
+
     <script>
+        // 방 만들기 기능: 클릭 시 랜덤한 4자리 숫자를 생성하여 해당 미션 페이지로 보냄
+        function createRoom(page) {
+            const roomId = Math.floor(1000 + Math.random() * 9000);
+            location.href = `${page}?room=${roomId}`;
+        }
+
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
         }
+
         function toggleTheme() {
             const current = localStorage.getItem('theme') || 'light';
             applyTheme(current === 'dark' ? 'light' : 'dark');
         }
+
+        // 초기 테마 설정 유지
         applyTheme(localStorage.getItem('theme') || 'light');
     </script>
 </body>
