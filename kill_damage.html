@@ -2,8 +2,10 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>벽킬딜내기 - 실시간 방송 시트</title>
+    <title>벽킬딜내기</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
         :root { 
             --bg: #fdfdfd; --card: #ffffff; --text: #333; 
             --p1: #ffadad; --p2: #ffd6a5; --p3: #caffbf; --p4: #9bf6ff;
@@ -15,39 +17,48 @@
             --p1: #8c4444; --p2: #8c6a44; --p3: #448c5a; --p4: #447a8c;
             --border: #666;
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 15px; font-size: 12px; transition: background 0.3s; }
+        
+        body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 15px; font-size: 15px; transition: background 0.3s; }
         
         .main-layout { display: flex; gap: 20px; align-items: flex-start; }
         
-        /* 좌측 고정 대시보드 */
-        .fixed-dashboard { position: sticky; top: 15px; width: 280px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
-        .viewer-card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); }
+        /* 좌측 고정 대시보드: 방송 화면 송출을 위해 너비 확대 */
+        .fixed-dashboard { position: sticky; top: 15px; width: 350px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
+        .viewer-card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); }
         
-        .header-title { font-weight: bold; color: #888; font-size: 11px; letter-spacing: 1px; margin-bottom: 5px; }
-        .main-score { font-size: 34px; font-weight: 900; color: var(--accent); margin: 10px 0; }
+        .header-title { font-weight: 900; color: #888; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px; }
+        .main-score { font-size: 46px; font-weight: 900; color: var(--accent); margin: 10px 0; letter-spacing: -1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
         
-        .player-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-weight: bold; border: 1px solid #bbb; color: #333; }
+        .player-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-radius: 8px; margin-bottom: 8px; font-weight: 900; font-size: 16px; border: 1px solid #bbb; color: #333; }
         [data-theme='dark'] .player-stat-row { color: #eee; border-color: #555; }
-        .p-score-detail { font-size: 12px; opacity: 0.9; }
+        .p-score-detail { font-size: 15px; opacity: 0.9; }
 
-        .bar-bg { height: 28px; background: #eee; border-radius: 14px; overflow: hidden; display: flex; position: relative; margin: 12px 0; border: 1px solid #999; }
+        .bar-bg { height: 32px; background: #eee; border-radius: 16px; overflow: hidden; display: flex; position: relative; margin: 15px 0; border: 1px solid #999; }
         .bar-segment { height: 100%; transition: width 0.5s ease; }
-        .bar-label { position: absolute; width: 100%; text-align: center; line-height: 28px; font-weight: 900; color: #000; z-index: 10; font-size: 14px; }
+        .bar-label { position: absolute; width: 100%; text-align: center; line-height: 32px; font-weight: 900; color: #000; z-index: 10; font-size: 16px; text-shadow: 0px 0px 4px rgba(255,255,255,0.8); }
 
-        /* 우측 시트 영역 */
         .content-area { flex: 1; min-width: 0; }
         table { width: 100%; border-collapse: collapse; background: var(--card); table-layout: fixed; margin-bottom: 10px; border: 2px solid var(--border); }
-        th, td { border: 1px solid var(--border); padding: 8px; text-align: center; }
-        th { background: rgba(128,128,128,0.1); font-size: 11px; color: var(--text); font-weight: bold; }
+        th, td { border: 1px solid var(--border); padding: 10px 6px; text-align: center; }
+        th { background: rgba(128,128,128,0.1); font-size: 14px; color: var(--text); font-weight: 900; }
 
-        input[type="number"], input[type="text"] { width: 90%; border: 1px solid #aaa; border-radius: 3px; padding: 5px 0; text-align: center; background: transparent; color: inherit; font-weight: bold; }
-        input:focus { outline: none; background: rgba(255,255,255,0.2); }
+        input[type="number"], input[type="text"] { width: 90%; border: 1px solid #aaa; border-radius: 4px; padding: 6px 0; text-align: center; background: transparent; color: inherit; font-weight: 900; font-family: 'Noto Sans KR', sans-serif; font-size: 15px; }
+        input:focus { outline: none; background: rgba(255,255,255,0.2); border-color: var(--accent); }
+
+        /* 🔥 숫자 입력칸 우측 화살표(스피너) 제거 CSS 🔥 */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox 지원 */
+        }
 
         .bg-p1 { background-color: var(--p1) !important; } .bg-p2 { background-color: var(--p2) !important; }
         .bg-p3 { background-color: var(--p3) !important; } .bg-p4 { background-color: var(--p4) !important; }
         
-        /* 맵별 고유 색상 */
-        .map-cell { font-weight: bold; transition: background 0.3s; }
+        .map-cell { font-weight: 900; transition: background 0.3s; font-size: 14px; }
         .map-erangel { background-color: #e8f5e9 !important; color: #2e7d32 !important; }
         .map-miramar { background-color: #fff3e0 !important; color: #d84315 !important; }
         .map-sanhok { background-color: #e0f2f1 !important; color: #00695c !important; }
@@ -55,11 +66,11 @@
         .map-vikendi { background-color: #eceff1 !important; color: #455a64 !important; }
         .map-rondo { background-color: #f3e5f5 !important; color: #6a1b9a !important; }
 
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; margin-bottom: 5px; transition: 0.2s; border: 2px solid var(--border); }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 16px; margin-bottom: 6px; transition: 0.2s; border: 2px solid var(--border); font-family: 'Noto Sans KR', sans-serif; }
         .btn-copy { background: #27ae60; color: white; }
         .btn-lobby { background: #444; color: white; }
         .btn-reset { background: #d32f2f; color: white; }
-        .btn-add { background: var(--card); border: 2px dashed #999; color: var(--text); margin-top: 10px; font-size: 14px; }
+        .btn-add { background: var(--card); border: 2px dashed #999; color: var(--text); margin-top: 10px; }
         .btn:hover { opacity: 0.8; transform: translateY(-1px); }
     </style>
 </head>
@@ -86,7 +97,7 @@
                 <div class="player-stat-row bg-p4"> <span class="n-4">P4</span> <span id="s-4" class="p-score-detail">0 (0-0)</span> </div>
             </div>
             
-            <div style="margin-top:15px; font-weight:bold; font-size:13px; display:flex; justify-content:space-between; border-top:2px solid var(--border); padding-top:10px;">
+            <div style="margin-top:18px; font-weight:900; font-size:16px; display:flex; justify-content:space-between; border-top:2px solid var(--border); padding-top:12px;">
                 <span>🍗 치킨: <span id="v-wins" style="color:#2e7d32;">0</span>회</span>
                 <span style="color:#d32f2f;">남은: <span id="v-remain">10,000</span></span>
             </div>
@@ -122,18 +133,18 @@
                         <button onclick="document.getElementById('cp-4').click()" style="border:none; background:none; cursor:pointer;">🎨</button>
                         <input type="color" id="cp-4" style="display:none" onchange="changeColor(4, this.value)">
                     </th>
-                    <th width="180">목표 점수 & 치킨 점수</th>
+                    <th width="200">목표 점수 & 치킨 점수</th>
                 </tr>
                 <tr>
                     <td>데스</td>
-                    <td><input type="number" id="die-1" style="width:50px;" value="300" onchange="updateAll()"></td>
-                    <td><input type="number" id="die-2" style="width:50px;" value="200" onchange="updateAll()"></td>
-                    <td><input type="number" id="die-3" style="width:50px;" value="100" onchange="updateAll()"></td>
-                    <td><input type="number" id="die-4" style="width:50px;" value="0" onchange="updateAll()"></td>
-                    <td style="text-align:left; padding-left:10px;">
-                        목표: <input type="number" id="targetInput" style="width:70px;" value="10000" onchange="updateAll()"><br>
-                        배틀: <input type="number" id="winBig" style="width:50px;" value="800" onchange="updateAll()"> 
-                        미니: <input type="number" id="winSmall" style="width:50px;" value="500" onchange="updateAll()">
+                    <td><input type="number" id="die-1" style="width:60px;" value="300" onchange="updateAll()"></td>
+                    <td><input type="number" id="die-2" style="width:60px;" value="200" onchange="updateAll()"></td>
+                    <td><input type="number" id="die-3" style="width:60px;" value="100" onchange="updateAll()"></td>
+                    <td><input type="number" id="die-4" style="width:60px;" value="0" onchange="updateAll()"></td>
+                    <td style="text-align:left; padding-left:10px; line-height: 1.8;">
+                        목표: <input type="number" id="targetInput" style="width:80px;" value="10000" onchange="updateAll()"><br>
+                        배틀: <input type="number" id="winBig" style="width:60px;" value="800" onchange="updateAll()"> 
+                        미니: <input type="number" id="winSmall" style="width:60px;" value="500" onchange="updateAll()">
                     </td>
                 </tr>
             </table>
@@ -175,17 +186,17 @@
     function createRow(r) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${r}</td>
-            <td class="map-cell"><select id="map-${r}" onchange="updateMapStyle(${r}); updateAll();" style="width:100%; border:none; background:transparent; color:inherit; font-weight:bold; cursor:pointer;">
+            <td style="font-weight: 900; font-size: 14px;">${r}</td>
+            <td class="map-cell"><select id="map-${r}" onchange="updateMapStyle(${r}); updateAll();" style="width:100%; border:none; background:transparent; color:inherit; font-weight:900; cursor:pointer; font-size: 14px; font-family: 'Noto Sans KR';">
                 <option value="">선택</option>${maps.map(m=>`<option value="${m.name}">${m.name}</option>`).join('')}
             </select></td>
             ${[1,2,3,4].map(p => `
-                <td><input type="number" id="k-${r}-${p}" onchange="updateAll()" style="border:none; width:28px; font-size:11px;"></td>
-                <td><input type="number" id="dmg-${r}-${p}" onchange="updateAll()" style="border:none; width:45px; font-size:11px;"></td>
-                <td><input type="checkbox" id="d-${r}-${p}" onchange="updateAll()"></td>
+                <td><input type="number" id="k-${r}-${p}" onchange="updateAll()" style="border:none; width:36px; font-size:15px; font-weight:900; font-family: 'Noto Sans KR';"></td>
+                <td><input type="number" id="dmg-${r}-${p}" onchange="updateAll()" style="border:none; width:55px; font-size:15px; font-weight:900; font-family: 'Noto Sans KR';"></td>
+                <td><input type="checkbox" id="d-${r}-${p}" onchange="updateAll()" style="transform: scale(1.3);"></td>
             `).join('')}
-            <td><input type="checkbox" id="w-${r}" onchange="updateAll()"></td>
-            <td id="total-${r}" style="font-weight:900; background:rgba(0,0,0,0.02);">0</td>
+            <td><input type="checkbox" id="w-${r}" onchange="updateAll()" style="transform: scale(1.3);"></td>
+            <td id="total-${r}" style="font-weight:900; font-size: 15px; background:rgba(0,0,0,0.02);">0</td>
         `;
         document.getElementById('sheetBody').appendChild(tr); rowCount = r;
     }
@@ -218,6 +229,7 @@
                 const dmg = Number(document.getElementById(`dmg-${r}-${p}`).value || 0);
                 const d = document.getElementById(`d-${r}-${p}`).checked;
                 
+                // 1킬 100점 + 딜량 1점 - 데스 페널티
                 const score = (k * 100) + dmg - (d ? settings.dies[p-1] : 0);
                 
                 rowS += score; pS[p-1] += score; pK[p-1] += k; pDmg[p-1] += dmg; if(d) pD[p-1]++;
@@ -240,6 +252,15 @@
                 if (document.activeElement !== input) input.value = n;
                 document.querySelectorAll(`.n-${i+1}`).forEach(el => el.innerText = n);
             });
+            
+            // 🔥 버그 수정: Firebase에 저장된 데스 페널티 값을 화면에 동기화 🔥
+            if (data.settings.dies) {
+                data.settings.dies.forEach((dValue, i) => {
+                    const dieInput = document.getElementById(`die-${i+1}`);
+                    if (document.activeElement !== dieInput) dieInput.value = dValue;
+                });
+            }
+
             document.getElementById('targetInput').value = data.settings.target;
             document.getElementById('winBig').value = data.settings.winBig;
             document.getElementById('winSmall').value = data.settings.winSmall;
@@ -274,9 +295,8 @@
         if(data.pS) data.pS.forEach((v, i) => {
             document.getElementById(`bar-${i+1}`).style.width = (data.grandTotal > 0 ? Math.max(0, (v / target) * 100) : 0) + "%";
             
-            // 요청하신 형식: 791 (1191-400)
-            let grossScore = (data.pK[i] * 100) + (data.pDmg?.[i] || 0); // 순수 획득 점수 (킬+딜)
-            let totalPenalty = data.pD[i] * (data.settings.dies[i] || 0); // 데스로 인한 총 감점
+            let grossScore = (data.pK[i] * 100) + (data.pDmg?.[i] || 0); 
+            let totalPenalty = data.pD[i] * (data.settings.dies[i] || 0); 
             
             document.getElementById(`s-${i+1}`).innerText = `${v.toLocaleString()} (${grossScore.toLocaleString()}-${totalPenalty.toLocaleString()})`;
         });
