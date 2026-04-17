@@ -5,6 +5,12 @@
     <title>벽킬딜내기</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        @font-face {
+            font-family: 'GmarketSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+            font-weight: 700;
+            font-style: normal;
+        }
 
         :root { 
             --bg: #fdfdfd; --card: #ffffff; --text: #333; 
@@ -22,20 +28,25 @@
         
         .main-layout { display: flex; gap: 20px; align-items: flex-start; }
         
-        /* 좌측 고정 대시보드: 방송 화면 송출을 위해 너비 확대 */
-        .fixed-dashboard { position: sticky; top: 15px; width: 350px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
+        .fixed-dashboard { position: sticky; top: 15px; width: 310px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
         .viewer-card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--border); }
         
-        .header-title { font-weight: 900; color: #888; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px; }
-        .main-score { font-size: 46px; font-weight: 900; color: var(--accent); margin: 10px 0; letter-spacing: -1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .header-title { font-weight: 900; color: #888; font-size: 13px; letter-spacing: 1px; margin-bottom: 5px; }
         
-        .player-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-radius: 8px; margin-bottom: 8px; font-weight: 900; font-size: 16px; border: 1px solid #bbb; color: #333; }
+        .main-score { font-size: 36px; font-weight: 900; color: var(--accent); margin: 5px 0 10px 0; letter-spacing: -1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        
+        .player-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; font-weight: 900; font-size: 15px; border: 1px solid #bbb; color: #333; }
         [data-theme='dark'] .player-stat-row { color: #eee; border-color: #555; }
+        
+        /* 🔥 플레이어 이름 깔끔하고 눈에 띄는 폰트 적용 🔥 */
+        .p-name { font-family: 'GmarketSans', sans-serif; font-size: 19px; letter-spacing: 0.5px; text-shadow: 1px 1px 0px rgba(255,255,255,0.4); }
+        [data-theme='dark'] .p-name { text-shadow: 1px 1px 0px rgba(0,0,0,0.5); }
+        
         .p-score-detail { font-size: 15px; opacity: 0.9; }
 
-        .bar-bg { height: 32px; background: #eee; border-radius: 16px; overflow: hidden; display: flex; position: relative; margin: 15px 0; border: 1px solid #999; }
+        .bar-bg { height: 28px; background: #eee; border-radius: 14px; overflow: hidden; display: flex; position: relative; margin: 15px 0; border: 1px solid #999; }
         .bar-segment { height: 100%; transition: width 0.5s ease; }
-        .bar-label { position: absolute; width: 100%; text-align: center; line-height: 32px; font-weight: 900; color: #000; z-index: 10; font-size: 16px; text-shadow: 0px 0px 4px rgba(255,255,255,0.8); }
+        .bar-label { position: absolute; width: 100%; text-align: center; line-height: 28px; font-weight: 900; color: #000; z-index: 10; font-size: 15px; text-shadow: 0px 0px 4px rgba(255,255,255,0.8); }
 
         .content-area { flex: 1; min-width: 0; }
         table { width: 100%; border-collapse: collapse; background: var(--card); table-layout: fixed; margin-bottom: 10px; border: 2px solid var(--border); }
@@ -45,18 +56,17 @@
         input[type="number"], input[type="text"] { width: 90%; border: 1px solid #aaa; border-radius: 4px; padding: 6px 0; text-align: center; background: transparent; color: inherit; font-weight: 900; font-family: 'Noto Sans KR', sans-serif; font-size: 15px; }
         input:focus { outline: none; background: rgba(255,255,255,0.2); border-color: var(--accent); }
 
-        /* 🔥 숫자 입력칸 우측 화살표(스피너) 제거 CSS 🔥 */
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
         input[type="number"] {
-            -moz-appearance: textfield; /* Firefox 지원 */
+            -moz-appearance: textfield; 
         }
 
-        .bg-p1 { background-color: var(--p1) !important; } .bg-p2 { background-color: var(--p2) !important; }
-        .bg-p3 { background-color: var(--p3) !important; } .bg-p4 { background-color: var(--p4) !important; }
+        .bg-p1 { background-color: var(--p1) !important; color: #111 !important; } .bg-p2 { background-color: var(--p2) !important; color: #111 !important; }
+        .bg-p3 { background-color: var(--p3) !important; color: #111 !important; } .bg-p4 { background-color: var(--p4) !important; color: #111 !important; }
         
         .map-cell { font-weight: 900; transition: background 0.3s; font-size: 14px; }
         .map-erangel { background-color: #e8f5e9 !important; color: #2e7d32 !important; }
@@ -66,7 +76,7 @@
         .map-vikendi { background-color: #eceff1 !important; color: #455a64 !important; }
         .map-rondo { background-color: #f3e5f5 !important; color: #6a1b9a !important; }
 
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 16px; margin-bottom: 6px; transition: 0.2s; border: 2px solid var(--border); font-family: 'Noto Sans KR', sans-serif; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 15px; margin-bottom: 6px; transition: 0.2s; border: 2px solid var(--border); font-family: 'Noto Sans KR', sans-serif; }
         .btn-copy { background: #27ae60; color: white; }
         .btn-lobby { background: #444; color: white; }
         .btn-reset { background: #d32f2f; color: white; }
@@ -91,13 +101,13 @@
             </div>
 
             <div id="player-summaries">
-                <div class="player-stat-row bg-p1"> <span class="n-1">P1</span> <span id="s-1" class="p-score-detail">0 (0-0)</span> </div>
-                <div class="player-stat-row bg-p2"> <span class="n-2">P2</span> <span id="s-2" class="p-score-detail">0 (0-0)</span> </div>
-                <div class="player-stat-row bg-p3"> <span class="n-3">P3</span> <span id="s-3" class="p-score-detail">0 (0-0)</span> </div>
-                <div class="player-stat-row bg-p4"> <span class="n-4">P4</span> <span id="s-4" class="p-score-detail">0 (0-0)</span> </div>
+                <div class="player-stat-row bg-p1"> <span class="p-name n-1">P1</span> <span id="s-1" class="p-score-detail">0 (0-0)</span> </div>
+                <div class="player-stat-row bg-p2"> <span class="p-name n-2">P2</span> <span id="s-2" class="p-score-detail">0 (0-0)</span> </div>
+                <div class="player-stat-row bg-p3"> <span class="p-name n-3">P3</span> <span id="s-3" class="p-score-detail">0 (0-0)</span> </div>
+                <div class="player-stat-row bg-p4"> <span class="p-name n-4">P4</span> <span id="s-4" class="p-score-detail">0 (0-0)</span> </div>
             </div>
             
-            <div style="margin-top:18px; font-weight:900; font-size:16px; display:flex; justify-content:space-between; border-top:2px solid var(--border); padding-top:12px;">
+            <div style="margin-top:15px; font-weight:900; font-size:15px; display:flex; justify-content:space-between; border-top:2px solid var(--border); padding-top:12px;">
                 <span>🍗 치킨: <span id="v-wins" style="color:#2e7d32;">0</span>회</span>
                 <span style="color:#d32f2f;">남은: <span id="v-remain">10,000</span></span>
             </div>
@@ -229,7 +239,6 @@
                 const dmg = Number(document.getElementById(`dmg-${r}-${p}`).value || 0);
                 const d = document.getElementById(`d-${r}-${p}`).checked;
                 
-                // 1킬 100점 + 딜량 1점 - 데스 페널티
                 const score = (k * 100) + dmg - (d ? settings.dies[p-1] : 0);
                 
                 rowS += score; pS[p-1] += score; pK[p-1] += k; pDmg[p-1] += dmg; if(d) pD[p-1]++;
@@ -253,7 +262,6 @@
                 document.querySelectorAll(`.n-${i+1}`).forEach(el => el.innerText = n);
             });
             
-            // 🔥 버그 수정: Firebase에 저장된 데스 페널티 값을 화면에 동기화 🔥
             if (data.settings.dies) {
                 data.settings.dies.forEach((dValue, i) => {
                     const dieInput = document.getElementById(`die-${i+1}`);
