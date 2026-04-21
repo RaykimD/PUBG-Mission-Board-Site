@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>벽킬딜내기</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap');
         @font-face {
             font-family: 'GmarketSans';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
@@ -22,6 +22,7 @@
             --bg: #1a1a1b; --card: #2d2d2e; --text: #eee; 
             --p1: #8c4444; --p2: #8c6a44; --p3: #448c5a; --p4: #447a8c;
             --border: #666;
+            color-scheme: dark; /* 🔥 스크롤바, 드롭다운, 체크박스를 기본 다크모드로 변경 */
         }
         
         body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 15px; font-size: 15px; transition: background 0.3s; }
@@ -38,7 +39,6 @@
         .player-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; font-weight: 900; font-size: 15px; border: 1px solid #bbb; color: #333; }
         [data-theme='dark'] .player-stat-row { color: #eee; border-color: #555; }
         
-        /* 🔥 플레이어 이름 깔끔하고 눈에 띄는 폰트 적용 🔥 */
         .p-name { font-family: 'GmarketSans', sans-serif; font-size: 19px; letter-spacing: 0.5px; text-shadow: 1px 1px 0px rgba(255,255,255,0.4); }
         [data-theme='dark'] .p-name { text-shadow: 1px 1px 0px rgba(0,0,0,0.5); }
         
@@ -65,16 +65,29 @@
             -moz-appearance: textfield; 
         }
 
+        /* 🔥 드롭다운 옵션 목록 색상 동기화 */
+        select option { background-color: var(--card); color: var(--text); }
+
         .bg-p1 { background-color: var(--p1) !important; color: #111 !important; } .bg-p2 { background-color: var(--p2) !important; color: #111 !important; }
         .bg-p3 { background-color: var(--p3) !important; color: #111 !important; } .bg-p4 { background-color: var(--p4) !important; color: #111 !important; }
         
         .map-cell { font-weight: 900; transition: background 0.3s; font-size: 14px; }
+        
+        /* 기존 라이트모드용 맵 색상 */
         .map-erangel { background-color: #e8f5e9 !important; color: #2e7d32 !important; }
         .map-miramar { background-color: #fff3e0 !important; color: #d84315 !important; }
         .map-sanhok { background-color: #e0f2f1 !important; color: #00695c !important; }
         .map-taego { background-color: #e3f2fd !important; color: #1565c0 !important; }
         .map-vikendi { background-color: #eceff1 !important; color: #455a64 !important; }
         .map-rondo { background-color: #f3e5f5 !important; color: #6a1b9a !important; }
+
+        /* 🔥 다크모드 전용 맵 색상 (어두운 배경 + 밝은 글씨) 🔥 */
+        [data-theme='dark'] .map-erangel { background-color: #1b2d20 !important; color: #81c784 !important; }
+        [data-theme='dark'] .map-miramar { background-color: #332211 !important; color: #ffb74d !important; }
+        [data-theme='dark'] .map-sanhok { background-color: #142e2b !important; color: #4db6ac !important; }
+        [data-theme='dark'] .map-taego { background-color: #142840 !important; color: #64b5f6 !important; }
+        [data-theme='dark'] .map-vikendi { background-color: #262c30 !important; color: #90a4ae !important; }
+        [data-theme='dark'] .map-rondo { background-color: #2b1836 !important; color: #ba68c8 !important; }
 
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 15px; margin-bottom: 6px; transition: 0.2s; border: 2px solid var(--border); font-family: 'Noto Sans KR', sans-serif; }
         .btn-copy { background: #27ae60; color: white; }
@@ -109,7 +122,7 @@
             
             <div style="margin-top:15px; font-weight:900; font-size:15px; display:flex; justify-content:space-between; border-top:2px solid var(--border); padding-top:12px;">
                 <span>🍗 치킨: <span id="v-wins" style="color:#2e7d32;">0</span>회</span>
-                <span style="color:#d32f2f;">남은 킬딜: <span id="v-remain">10,000</span></span>
+                <span style="color:#d32f2f;">남은: <span id="v-remain">10,000</span></span>
             </div>
         </div>
         
