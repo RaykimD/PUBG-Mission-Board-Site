@@ -116,11 +116,11 @@
 
     <script>
         function confirmCreateRoom(page, title) {
-            if(confirm(`[${title}] 새로운 방을 생성하여 입장하시겠습니까?\n생성 후 우측 상단의 링크 복사 버튼을 통해 팀원을 초대하세요.`)) {
-                const roomId = Math.floor(1000 + Math.random() * 9000);
-                location.href = `./${page}?room=${roomId}`;
-            }
-        }
+           if(confirm(`[${title}] 새로운 방을 생성하여 입장하시겠습니까?\n생성 후 우측 상단의 링크 복사 버튼을 통해 팀원을 초대하세요.`)) {
+           const roomId = crypto.randomUUID().replace(/-/g, '').substring(0, 10).toUpperCase();
+           location.href = `./${page}?room=${roomId}`;
+    }
+}
 
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
