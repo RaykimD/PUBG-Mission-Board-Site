@@ -40,7 +40,7 @@
             text-align: center;
         }
         .mission-card:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 15px 35px rgba(77, 148, 255, 0.15); }
-        .mission-card.locked { opacity: 0.4; cursor: default; filter: grayscale(1); }
+        .mission-card.locked { opacity: 0.4; cursor: default; filter: grayscale(1); transform: none; box-shadow: none; border-color: var(--border-color); }
 
         .icon { font-size: 3rem; margin-bottom: 12px; display: block; }
         .m-title { font-size: 1.4rem; font-weight: 800; }
@@ -113,6 +113,16 @@
                     <span class="m-title">준비 중</span>
                     <span class="m-desc">Next Mission...</span>
                 </div>
+            </div>
+
+            <!-- 새로 추가된 EVENT 구역 -->
+            <div class="section-header">🎉 EVENT</div>
+            <div class="mission-grid others">
+                <a href="#" onclick="confirmCreateRoom('doublebingo.html', '리카의 더블빙고')" class="mission-card">
+                    <span class="icon">🆚</span>
+                    <span class="m-title">리카의 더블빙고</span>
+                    <span class="m-desc">알파벳으로 진행되는 듀얼 빙고!</span>
+                </a>
             </div>
 
             <footer>Made by. 김쨔응 | PUBG Mission Platform 2026</footer>
