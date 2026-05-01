@@ -46,6 +46,32 @@
         .m-title { font-size: 1.4rem; font-weight: 800; }
         .m-desc { font-size: 0.85rem; opacity: 0.6; margin-top: 8px; line-height: 1.4; display: block; }
 
+        /* --- 이벤트 배너 가로형 레이아웃 --- */
+        .mission-card.event-card {
+            display: flex;
+            align-items: center;
+            text-align: left;
+            gap: 25px;
+            padding: 20px 30px;
+        }
+        
+        .event-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%; /* 움짤을 동그랗게 */
+            object-fit: cover;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .event-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .event-text .m-title { margin-bottom: 5px; }
+        .event-text .m-desc { margin-top: 0; }
+
         footer { margin-top: 60px; padding: 30px 0; opacity: 0.4; border-top: 1px solid var(--border-color); font-size: 0.8rem; text-align: center; font-weight: bold; }
 
         @media (max-width: 900px) {
@@ -118,10 +144,12 @@
             <!-- 새로 추가된 EVENT 구역 -->
             <div class="section-header">🎉 EVENT</div>
             <div class="mission-grid others">
-                <a href="#" onclick="confirmCreateRoom('doublebingo.html', '리카의 더블빙고')" class="mission-card">
-                    <span class="icon">🆚</span>
-                    <span class="m-title">리카의 더블빙고</span>
-                    <span class="m-desc">알파벳으로 진행되는 듀얼 빙고!</span>
+                <a href="#" onclick="confirmCreateRoom('doublebingo.html', '리카의 더블빙고')" class="mission-card event-card">
+                    <img src="리카.gif" alt="리카" class="event-img">
+                    <div class="event-text">
+                        <span class="m-title">리카의 더블빙고</span>
+                        <span class="m-desc">알파벳으로 진행되는 듀얼 빙고!</span>
+                    </div>
                 </a>
             </div>
 
@@ -134,8 +162,8 @@
            if(confirm(`[${title}] 새로운 방을 생성하여 입장하시겠습니까?\n생성 후 우측 상단의 링크 복사 버튼을 통해 팀원을 초대하세요.`)) {
            const roomId = crypto.randomUUID().replace(/-/g, '').substring(0, 10).toUpperCase();
            location.href = `./${page}?room=${roomId}`;
-    }
-}
+           }
+        }
 
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
