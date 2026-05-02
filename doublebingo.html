@@ -3,176 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALPHABET BINGO - DUAL MODE V6</title>
+    <title>ALPHABET BINGO - DUAL MODE</title>
     <style>
         /* === 전역 CSS 변수 (테마 & 팀 컬러) === */
         :root {
-            /* 다크모드 (기본값) */
-            --bg-body: #0f0f0f;
-            --bg-panel: #1a1a1a;
-            --bg-control: #1e1e1e;
-            --bg-log: #151515;
-            --text-main: #ffffff;
-            --text-sub: #aaaaaa;
-            --border-color: #333333;
-            --cell-bg: #2c2c2c;
-            --cell-border: #444444;
-            --stats-bg: #111111;
+            --bg-body: #0f0f0f; --bg-panel: #1a1a1a; --bg-control: #1e1e1e; --bg-log: #151515;
+            --text-main: #ffffff; --text-sub: #aaaaaa; --border-color: #333333;
+            --cell-bg: #2c2c2c; --cell-border: #444444; --stats-bg: #111111;
             
-            /* 기본 팀 컬러 (블루/핑크) */
-            --team1-color: #3a86ff;
-            --team1-rgb: 58, 134, 255;
-            --team2-color: #ff006e;
-            --team2-rgb: 255, 0, 110;
+            --team1-color: #3a86ff; --team1-rgb: 58, 134, 255;
+            --team2-color: #ff006e; --team2-rgb: 255, 0, 110;
         }
 
-        /* 화이트모드 변수 */
         body.light-mode {
-            --bg-body: #e5e7eb;
-            --bg-panel: #ffffff;
-            --bg-control: #f3f4f6;
-            --bg-log: #ffffff;
-            --text-main: #1f2937;
-            --text-sub: #4b5563;
-            --border-color: #d1d5db;
-            --cell-bg: #f9fafb;
-            --cell-border: #d1d5db;
-            --stats-bg: #f3f4f6;
+            --bg-body: #e5e7eb; --bg-panel: #ffffff; --bg-control: #f3f4f6; --bg-log: #ffffff;
+            --text-main: #1f2937; --text-sub: #4b5563; --border-color: #d1d5db;
+            --cell-bg: #f9fafb; --cell-border: #d1d5db; --stats-bg: #f3f4f6;
         }
 
-        /* 기본 리셋 및 100% 화면 핏 강제 고정 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { 
-            width: 100%; height: 100%; 
-            overflow: hidden; /* 브라우저 자체 스크롤 원천 차단 */
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
-            transition: background-color 0.3s, color 0.3s;
+            width: 100%; height: 100%; overflow: hidden; 
+            background-color: var(--bg-body); color: var(--text-main); 
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif; transition: 0.3s;
         }
         
-        .layout-container { 
-            display: grid; 
-            grid-template-columns: 5fr 4fr 1.5fr; 
-            height: 100vh; /* 뷰포트 높이 100% 고정 */
-            max-height: 100vh;
-        }
+        .layout-container { display: grid; grid-template-columns: 5fr 4fr 1.5fr; height: 100vh; max-height: 100vh; }
 
-        /* 각 섹션별 팽창 방지 핵심 로직 (min-height: 0) */
         .broadcast-section, .control-section, .log-section {
-            height: 100vh; 
-            min-height: 0; /* 그리드 아이템이 콘텐츠 크기에 맞춰 늘어나는 현상 방지 */
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
+            height: 100vh; min-height: 0; display: flex; flex-direction: column; padding: 20px;
         }
 
-        /* --- 공통 섹션 헤더 --- */
         .section-header {
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: var(--text-main);
-            text-align: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border-color);
-            letter-spacing: 2px;
-            flex-shrink: 0;
-            background-color: var(--bg-panel);
-            padding-top: 10px;
-            border-radius: 8px;
-            transition: 0.3s;
+            font-size: 1.5rem; font-weight: 900; color: var(--text-main); text-align: center;
+            margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--border-color);
+            letter-spacing: 2px; flex-shrink: 0; background-color: var(--bg-panel);
+            padding-top: 10px; border-radius: 8px; transition: 0.3s; position: relative;
         }
+
+        /* --- 링크 복사 버튼 --- */
+        .btn-copy {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            padding: 6px 12px; font-size: 0.85rem; font-weight: bold; border-radius: 6px;
+            background-color: var(--border-color); color: var(--text-main); border: none;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-copy:hover { background-color: var(--text-sub); color: #fff; }
 
         .team-stats {
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            background-color: var(--stats-bg);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            transition: 0.3s;
+            text-align: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;
+            background-color: var(--stats-bg); padding: 10px; border-radius: 8px;
+            border: 1px solid var(--border-color); transition: 0.3s;
         }
-        .stats-check { color: #4ade80; } 
-        .stats-remain { color: #f87171; } 
-        .stats-divider { color: var(--text-sub); margin: 0 10px; }
+        .stats-check { color: #4ade80; } .stats-remain { color: #f87171; } .stats-divider { color: var(--text-sub); margin: 0 10px; }
 
-        /* =========================================
-           1. 좌측: 송출부 (Broadcast View)
-           ========================================= */
-        .broadcast-section {
-            background-color: var(--bg-body); 
-            border-right: 2px solid var(--border-color);
-            transition: 0.3s;
-        }
-
-        .boards-container {
-            display: flex;
-            gap: 20px;
-            flex: 1;
-            justify-content: center;
-            align-items: center;
-            min-height: 0; 
-        }
-
+        .broadcast-section { background-color: var(--bg-body); border-right: 2px solid var(--border-color); }
+        .boards-container { display: flex; gap: 20px; flex: 1; justify-content: center; align-items: center; min-height: 0; }
+        
         .board-wrapper {
-            width: 100%;
-            max-width: 420px; 
-            display: flex;
-            flex-direction: column;
-            border: 4px solid;
-            border-radius: 16px;
-            padding: 20px;
-            background-color: var(--bg-panel);
-            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+            width: 100%; max-width: 420px; display: flex; flex-direction: column;
+            border: 4px solid; border-radius: 16px; padding: 20px;
+            background-color: var(--bg-panel); transition: 0.3s;
         }
-
         #team1-board-view { border-color: var(--team1-color); box-shadow: 0 0 20px rgba(var(--team1-rgb), 0.15); }
         #team2-board-view { border-color: var(--team2-color); box-shadow: 0 0 20px rgba(var(--team2-rgb), 0.15); }
 
-        .team-name-display {
-            text-align: center;
-            font-size: 2rem;
-            font-weight: 900;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-        #team1-name-view { color: var(--team1-color); }
-        #team2-name-view { color: var(--team2-color); }
+        .team-name-display { text-align: center; font-size: 2rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; }
+        #team1-name-view { color: var(--team1-color); } #team2-name-view { color: var(--team2-color); }
 
         .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; }
-
         .view-cell {
-            aspect-ratio: 1 / 1;
-            background-color: var(--cell-bg);
-            border: 2px solid var(--cell-border);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text-sub);
-            transition: all 0.2s ease-in-out;
+            aspect-ratio: 1 / 1; background-color: var(--cell-bg); border: 2px solid var(--cell-border);
+            border-radius: 8px; display: flex; justify-content: center; align-items: center;
+            font-size: 2rem; font-weight: 800; color: var(--text-sub); transition: 0.2s;
         }
 
-        /* =========================================
-           2. 중앙: 조작부 (Control Panel)
-           ========================================= */
-        .control-section {
-            background-color: var(--bg-control);
-            border-right: 2px solid var(--border-color);
-            transition: 0.3s;
-        }
-
+        .control-section { background-color: var(--bg-control); border-right: 2px solid var(--border-color); }
         .tab-header { display: flex; gap: 10px; margin-bottom: 15px; flex-shrink: 0; }
         .tab-btn {
-            flex: 1; padding: 15px; font-size: 1.1rem; font-weight: bold;
-            border: none; border-radius: 8px; cursor: pointer;
-            background-color: var(--bg-panel); color: var(--text-sub); 
-            border: 2px solid var(--border-color); transition: 0.2s;
+            flex: 1; padding: 15px; font-size: 1.1rem; font-weight: bold; border: 2px solid var(--border-color); 
+            border-radius: 8px; cursor: pointer; background-color: var(--bg-panel); color: var(--text-sub); transition: 0.2s;
         }
         .tab-btn.active#btn-tab1 { background-color: var(--team1-color); color: #fff; border-color: var(--team1-color); }
         .tab-btn.active#btn-tab2 { background-color: var(--team2-color); color: #fff; border-color: var(--team2-color); }
@@ -181,119 +91,77 @@
         .tab-content.active { display: flex; }
 
         .control-tools { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; flex-shrink: 0; }
-        
         .team-input-group { display: flex; gap: 10px; }
         .team-input-group input[type="color"] {
-            width: 50px; height: 46px; border: 2px solid var(--border-color);
-            border-radius: 8px; background: var(--bg-panel); cursor: pointer; padding: 2px;
-            flex-shrink: 0;
+            width: 50px; height: 46px; border: 2px solid var(--border-color); border-radius: 8px; 
+            background: var(--bg-panel); cursor: pointer; padding: 2px; flex-shrink: 0;
         }
         .team-input-group input[type="text"] {
-            flex: 1; padding: 10px; font-size: 1.2rem; font-weight: bold; 
-            border: 2px solid var(--border-color); border-radius: 8px; 
-            background: var(--bg-panel); color: var(--text-main); text-align: center;
+            flex: 1; padding: 10px; font-size: 1.2rem; font-weight: bold; border: 2px solid var(--border-color); 
+            border-radius: 8px; background: var(--bg-panel); color: var(--text-main); text-align: center;
         }
 
+        /* 컨트롤 버튼 그룹 (리셋 & 에디트) */
+        .action-group { display: flex; gap: 10px; }
         .btn-team1, .btn-team2 {
-            padding: 12px; font-size: 1.1rem; font-weight: bold; border: none;
+            flex: 2; padding: 12px; font-size: 1.1rem; font-weight: bold; border: none;
             border-radius: 8px; cursor: pointer; color: white; transition: 0.2s;
         }
         .btn-team1 { background-color: var(--team1-color); }
         .btn-team2 { background-color: var(--team2-color); }
         .btn-team1:hover, .btn-team2:hover { filter: brightness(0.8); }
 
+        .btn-edit {
+            flex: 1; padding: 12px; font-size: 1rem; font-weight: bold; border: none;
+            border-radius: 8px; cursor: pointer; background-color: #444; color: #fff; transition: 0.2s;
+        }
+        .btn-edit:hover { background-color: #666; }
+        .btn-edit.active { background-color: #ffbe0b; color: #000; animation: blink 1s infinite alternate; }
+        
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
+
         .control-grid {
             display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
             width: 100%; max-width: 480px; margin: 0 auto;
         }
-
         .control-cell {
-            aspect-ratio: 1 / 1;
-            background-color: var(--cell-bg); border: 2px solid var(--cell-border); border-radius: 8px;
+            aspect-ratio: 1 / 1; background-color: var(--cell-bg); border: 2px solid var(--cell-border); border-radius: 8px;
             display: flex; justify-content: center; align-items: center;
-            font-size: 2rem; font-weight: bold; color: var(--text-main);
-            cursor: pointer; user-select: none; transition: 0.1s;
+            font-size: 2rem; font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none; transition: 0.1s;
         }
         .control-cell:hover { filter: brightness(0.85); transform: scale(0.98); }
 
-        .active-team1 {
-            background-color: var(--team1-color) !important; color: #fff !important;
-            border-color: #fff !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-        }
-        .active-team2 {
-            background-color: var(--team2-color) !important; color: #fff !important;
-            border-color: #fff !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-        }
+        .active-team1 { background-color: var(--team1-color) !important; color: #fff !important; border-color: #fff !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+        .active-team2 { background-color: var(--team2-color) !important; color: #fff !important; border-color: #fff !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
 
         .global-controls { display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding-top: 20px; border-top: 2px solid var(--border-color); flex-shrink: 0; }
-        .btn-action {
-            width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold;
-            border: none; border-radius: 8px; cursor: pointer; transition: 0.2s;
-        }
-        .btn-reset { background-color: #ffbe0b; color: #000; }
-        .btn-reset:hover { background-color: #e5ab00; }
+        .btn-action { width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-reset { background-color: #ffbe0b; color: #000; } .btn-reset:hover { background-color: #e5ab00; }
         .btn-theme { background-color: var(--bg-panel); color: var(--text-main); border: 2px solid var(--border-color); }
         .btn-theme:hover { background-color: var(--border-color); }
 
-        /* =========================================
-           3. 우측: 체크 로그 (Activity Log)
-           ========================================= */
-        .log-section {
-            background-color: var(--bg-log); 
-            transition: 0.3s;
-        }
-
-        .log-header {
-            font-size: 1.2rem; font-weight: 900; margin-bottom: 15px; text-align: center;
-            color: var(--text-main); letter-spacing: 1px; border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px; flex-shrink: 0;
-        }
-
-        /* 로그 스크롤 영역의 팽창 방지 및 스크롤 강제 활성화 */
-        .log-container {
-            flex: 1; 
-            overflow-y: auto; /* 자체 스크롤 활성화 */
-            min-height: 0; /* 부모 요소를 넘어 팽창하는 것 차단 */
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding-right: 5px;
-        }
-
-        .log-container::-webkit-scrollbar { width: 6px; }
-        .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-
-        .log-item {
-            padding: 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold;
-            display: flex; justify-content: space-between; align-items: center;
-            animation: fadeIn 0.3s ease-in-out; flex-wrap: wrap; gap: 5px;
-            flex-shrink: 0; /* 로그 아이템 찌그러짐 방지 */
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .log-section { background-color: var(--bg-log); }
+        .log-header { font-size: 1.2rem; font-weight: 900; margin-bottom: 15px; text-align: center; color: var(--text-main); letter-spacing: 1px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; flex-shrink: 0; }
+        .log-container { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding-right: 5px; }
+        .log-container::-webkit-scrollbar { width: 6px; } .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .log-item { padding: 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.3s ease-in-out; flex-wrap: wrap; gap: 5px; flex-shrink: 0; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         .log-team1 { background-color: rgba(var(--team1-rgb), 0.15); border-left: 4px solid var(--team1-color); color: var(--text-main); }
         .log-team1 .team-name-tag { color: var(--team1-color); }
-        
         .log-team2 { background-color: rgba(var(--team2-rgb), 0.15); border-left: 4px solid var(--team2-color); color: var(--text-main); }
         .log-team2 .team-name-tag { color: var(--team2-color); }
-
         .log-system { background-color: var(--bg-panel); border-left: 4px solid #ffbe0b; color: var(--text-sub); text-align: center; justify-content: center;}
-
+        
         .log-letter { font-size: 1rem; color: var(--text-main); }
-        .log-action-add { color: #4ade80; } 
-        .log-action-remove { color: #f87171; text-decoration: line-through; } 
-
+        .log-action-add { color: #4ade80; } .log-action-remove { color: #f87171; text-decoration: line-through; } 
     </style>
 </head>
 <body>
 
 <div class="layout-container">
     
-    <!-- 1. 좌측: 송출부 -->
     <div class="broadcast-section" id="broadcast-area">
         <div class="section-header">📺 방송 송출용</div>
         <div class="boards-container">
@@ -310,9 +178,12 @@
         </div>
     </div>
 
-    <!-- 2. 중앙: 조작부 -->
     <div class="control-section">
-        <div class="section-header">🕹️ 입력칸</div>
+        <div class="section-header">
+            🕹️ 입력칸
+            <!-- 링크 복사 버튼 추가 -->
+            <button class="btn-copy" onclick="copyRoomLink()">🔗 링크 복사</button>
+        </div>
         
         <div class="tab-header">
             <button class="tab-btn active" id="btn-tab1" onclick="switchTab(1)">1팀 빙고</button>
@@ -325,7 +196,12 @@
                     <input type="color" id="team1-color" value="#3a86ff" onchange="updateTeamColor(1)" title="1팀 색상 변경">
                     <input type="text" id="team1-input" value="TEAM 1" oninput="updateTeamName(1)">
                 </div>
-                <button class="btn-team1" onclick="generateBingo(1, true)">1팀 리롤</button>
+                <div class="action-group">
+                    <!-- 버튼명 변경 -->
+                    <button class="btn-team1" onclick="generateBingo(1, true)">1팀 빙고 리셋</button>
+                    <!-- 수정 모드 버튼 추가 -->
+                    <button class="btn-edit" id="btn-edit-1" onclick="toggleEditMode(1)">✏️ 칸 수정</button>
+                </div>
             </div>
             <div class="control-grid" id="control-grid1"></div>
         </div>
@@ -336,7 +212,12 @@
                     <input type="color" id="team2-color" value="#ff006e" onchange="updateTeamColor(2)" title="2팀 색상 변경">
                     <input type="text" id="team2-input" value="TEAM 2" oninput="updateTeamName(2)">
                 </div>
-                <button class="btn-team2" onclick="generateBingo(2, true)">2팀 리롤</button>
+                <div class="action-group">
+                    <!-- 버튼명 변경 -->
+                    <button class="btn-team2" onclick="generateBingo(2, true)">2팀 빙고 리셋</button>
+                    <!-- 수정 모드 버튼 추가 -->
+                    <button class="btn-edit" id="btn-edit-2" onclick="toggleEditMode(2)">✏️ 칸 수정</button>
+                </div>
             </div>
             <div class="control-grid" id="control-grid2"></div>
         </div>
@@ -347,7 +228,6 @@
         </div>
     </div>
 
-    <!-- 3. 우측: 체크 로그 -->
     <div class="log-section">
         <div class="log-header">ACTION LOG</div>
         <div class="log-container" id="log-container"></div>
@@ -358,11 +238,34 @@
 <script>
     const ALL_ALPHABETS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     let teamStats = { 1: { checked: 0, total: 25 }, 2: { checked: 0, total: 25 } };
+    
+    // 에디트 모드 상태 저장
+    let editMode = { 1: false, 2: false };
 
-    function toggleTheme() {
-        document.body.classList.toggle('light-mode');
+    // 링크 복사 함수
+    function copyRoomLink() {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert("방 링크가 복사되었습니다!\n함께할 팀원에게 공유해주세요.");
+        }).catch(() => {
+            alert("링크 복사에 실패했습니다. 주소창의 URL을 직접 복사해주세요.");
+        });
     }
 
+    // 칸 수정 모드 토글 함수
+    function toggleEditMode(teamNum) {
+        editMode[teamNum] = !editMode[teamNum];
+        const btn = document.getElementById(`btn-edit-${teamNum}`);
+        if (editMode[teamNum]) {
+            btn.classList.add('active');
+            btn.textContent = "✅ 수정 완료";
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = "✏️ 칸 수정";
+        }
+    }
+
+    function toggleTheme() { document.body.classList.toggle('light-mode'); }
     function hexToRgb(hex) {
         let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : "0,0,0";
@@ -370,9 +273,8 @@
 
     function updateTeamColor(teamNum) {
         const hexColor = document.getElementById(`team${teamNum}-color`).value;
-        const rgbColor = hexToRgb(hexColor);
         document.documentElement.style.setProperty(`--team${teamNum}-color`, hexColor);
-        document.documentElement.style.setProperty(`--team${teamNum}-rgb`, rgbColor);
+        document.documentElement.style.setProperty(`--team${teamNum}-rgb`, hexToRgb(hexColor));
     }
 
     function getRandomAlphabets() {
@@ -385,24 +287,18 @@
     }
 
     function switchTab(teamNum) {
-        document.getElementById('btn-tab1').classList.remove('active');
-        document.getElementById('btn-tab2').classList.remove('active');
+        document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
         document.getElementById(`btn-tab${teamNum}`).classList.add('active');
-
-        document.getElementById('tab1').classList.remove('active');
-        document.getElementById('tab2').classList.remove('active');
         document.getElementById(`tab${teamNum}`).classList.add('active');
     }
 
     function updateStatsUI(teamNum) {
         const stats = teamStats[teamNum];
-        const remainCount = stats.total - stats.checked;
-        const statsHtml = `
+        document.getElementById(`view-stats${teamNum}`).innerHTML = `
             <span class="stats-check">체크: ${stats.checked}</span>
             <span class="stats-divider">|</span>
-            <span class="stats-remain">남은 칸: ${remainCount}</span>
+            <span class="stats-remain">남은 칸: ${stats.total - stats.checked}</span>
         `;
-        document.getElementById(`view-stats${teamNum}`).innerHTML = statsHtml;
     }
 
     function addLog(teamNum, letter, isChecked, isSystemLog = false, msg = "") {
@@ -415,35 +311,23 @@
         } else {
             const teamName = document.getElementById(`team${teamNum}-input`).value || `TEAM ${teamNum}`;
             logItem.className = `log-item log-team${teamNum}`;
-            
-            const actionText = isChecked ? 
-                `<span class="log-action-add">체크</span>` : 
-                `<span class="log-action-remove">취소</span>`;
-
-            logItem.innerHTML = `
-                <span class="team-name-tag">[${teamName}]</span>
-                <span class="log-letter">${letter}</span>
-                ${actionText}
-            `;
+            logItem.innerHTML = `<span class="team-name-tag">[${teamName}]</span><span class="log-letter">${letter}</span>${isChecked ? `<span class="log-action-add">체크</span>` : `<span class="log-action-remove">취소</span>`}`;
         }
-
-        // prepend를 사용하여 항상 최신 로그를 최상단에 추가
         logContainer.prepend(logItem);
     }
 
     function generateBingo(teamNum, isManual = false) {
+        // 리셋 시 에디트 모드 강제 해제
+        if (editMode[teamNum]) toggleEditMode(teamNum);
+
         const viewGrid = document.getElementById(`view-grid${teamNum}`);
         const controlGrid = document.getElementById(`control-grid${teamNum}`);
-        
-        viewGrid.innerHTML = "";
-        controlGrid.innerHTML = "";
+        viewGrid.innerHTML = ""; controlGrid.innerHTML = "";
 
         teamStats[teamNum].checked = 0;
         updateStatsUI(teamNum);
 
-        const alphabets = getRandomAlphabets();
-
-        alphabets.forEach((letter, index) => {
+        getRandomAlphabets().forEach((letter, index) => {
             const viewCell = document.createElement("div");
             viewCell.className = "view-cell";
             viewCell.id = `view-cell-${teamNum}-${index}`; 
@@ -455,45 +339,58 @@
             controlCell.textContent = letter;
             
             controlCell.onclick = function() {
+                // 1. 에디트 모드가 켜져 있을 때의 로직 (마킹 대신 알파벳 수정)
+                if (editMode[teamNum]) {
+                    const currentLetter = this.textContent;
+                    let newLetter = prompt(`[현재 알파벳: ${currentLetter}]\n원하시는 새로운 알파벳(A~Z)이나 문자를 입력하세요:`, currentLetter);
+                    
+                    if (newLetter !== null && newLetter.trim() !== "") {
+                        // 첫 글자만 대문자로 추출
+                        newLetter = newLetter.trim().substring(0, 1).toUpperCase();
+                        
+                        this.textContent = newLetter;
+                        document.getElementById(`view-cell-${teamNum}-${index}`).textContent = newLetter;
+                        
+                        const teamName = document.getElementById(`team${teamNum}-input`).value || `TEAM ${teamNum}`;
+                        addLog(0, "", false, true, `✏️ [${teamName}] ${currentLetter} -> ${newLetter} 변경`);
+                    }
+                    return; // 에디트 모드일 땐 마킹을 진행하지 않고 종료
+                }
+
+                // 2. 평상시 로직 (클릭 시 마킹 및 카운터 증가/감소)
                 const targetClass = `active-team${teamNum}`;
                 const isNowChecked = this.classList.toggle(targetClass);
-                
-                const matchingViewCell = document.getElementById(`view-cell-${teamNum}-${index}`);
-                matchingViewCell.classList.toggle(targetClass);
+                document.getElementById(`view-cell-${teamNum}-${index}`).classList.toggle(targetClass);
 
                 if (isNowChecked) teamStats[teamNum].checked++;
                 else teamStats[teamNum].checked--;
                 
                 updateStatsUI(teamNum);
-                addLog(teamNum, letter, isNowChecked);
+                addLog(teamNum, this.textContent, isNowChecked);
             };
-
             controlGrid.appendChild(controlCell);
         });
 
         if (isManual) {
             const teamName = document.getElementById(`team${teamNum}-input`).value || `TEAM ${teamNum}`;
-            addLog(teamNum, "", false, true, `🔄 ${teamName} 보드 리롤 됨`);
+            addLog(teamNum, "", false, true, `🔄 ${teamName} 보드 리셋 됨`);
         }
     }
 
     function updateTeamName(teamNum) {
-        const inputVal = document.getElementById(`team${teamNum}-input`).value;
-        document.getElementById(`team${teamNum}-name-view`).textContent = inputVal || `TEAM ${teamNum}`;
+        document.getElementById(`team${teamNum}-name-view`).textContent = document.getElementById(`team${teamNum}-input`).value || `TEAM ${teamNum}`;
     }
 
     function resetAll() {
         if(confirm("양 팀의 빙고판과 로그를 완전히 초기화하시겠습니까?")) {
-            generateBingo(1);
-            generateBingo(2);
+            generateBingo(1); generateBingo(2);
             document.getElementById("log-container").innerHTML = ""; 
             addLog(0, "", false, true, "✨ 전체 판이 초기화 되었습니다");
         }
     }
 
     window.onload = () => {
-        generateBingo(1);
-        generateBingo(2);
+        generateBingo(1); generateBingo(2);
         addLog(0, "", false, true, "🚀 알파벳 빙고 시스템 시작");
     };
 </script>
