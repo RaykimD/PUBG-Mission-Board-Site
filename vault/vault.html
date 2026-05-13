@@ -5,45 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>금고 털기 - 협동 모드</title>
 <style>
-    :root {
-        --bg-color: #1a1816; --panel-bg: #26221f; --border-color: #4a453f; --text-main: #e0dcd3;
-        --title-color: #ffffff; --input-bg: #111; --pubg-yellow: #f2a900; --pubg-red: #d32f2f;
-        --pubg-green: #388e3c; --log-warn: #00d2ff; --log-sys: #f2a900;
-    }
-    body.light-mode {
-        --bg-color: #f5f5f5; --panel-bg: #ffffff; --border-color: #cccccc; --text-main: #222222;
-        --title-color: #111111; --input-bg: #f9f9f9; --log-warn: #007bb5; --log-sys: #cc7a00;
-    }
-    body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
+    :root { --bg-color: #1a1816; --panel-bg: #26221f; --border-color: #4a453f; --text-main: #e0dcd3; --title-color: #ffffff; --input-bg: #111; --pubg-yellow: #f2a900; --pubg-red: #d32f2f; --pubg-green: #388e3c; --log-warn: #00d2ff; --log-sys: #f2a900; }
+    body.light-mode { --bg-color: #f5f5f5; --panel-bg: #ffffff; --border-color: #cccccc; --text-main: #222222; --title-color: #111111; --input-bg: #f9f9f9; --log-warn: #007bb5; --log-sys: #cc7a00; }
+    body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
     input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; }
 
-    /* 상단 컨트롤 바 */
     .top-controls { width: 1000px; max-width: 100%; display: flex; justify-content: space-between; margin-bottom: 30px; align-items: center; }
     .room-info { display: flex; gap: 10px; align-items: center; }
     .btn-basic { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    .btn-basic:hover { background: var(--border-color); }
-    .btn-rule { background: #005f99; color: white; border: 2px solid #008be0; padding: 6px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s;}
-    .btn-rule:hover { background: #008be0; }
-    .btn-reset-custom { background-color: #d32f2f; color: white; border: 3px solid #666; padding: 8px 24px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
-    .btn-reset-custom:hover { background-color: #b71c1c; border-color: #888; }
+    .btn-rule { background: #005f99; color: white; border: 2px solid #008be0; padding: 6px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .btn-reset-custom { background-color: #d32f2f; color: white; border: 3px solid #666; padding: 8px 24px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
     .header { text-align: center; margin-bottom: 25px; }
     .header h1 { margin: 0; font-size: 46px; font-weight: 900; color: var(--pubg-yellow); letter-spacing: 2px; }
 
-    /* 룰 모달 */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(3px); }
     .modal-content { background: var(--panel-bg); border: 2px solid var(--pubg-yellow); border-radius: 12px; width: 600px; max-width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.8); overflow: hidden; }
     .modal-header { background: #111; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); }
     .modal-header h2 { margin: 0; font-size: 20px; color: var(--pubg-yellow); }
     .close-btn { background: transparent; border: none; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; line-height: 1;}
-    .close-btn:hover { color: #fff; }
     .modal-body { padding: 20px 30px; overflow-y: auto; font-size: 15px; line-height: 1.6; color: var(--text-main); }
     .modal-body h3 { color: #fff; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px;}
-    .modal-body h3:first-child { margin-top: 0; }
-    .modal-body ul { padding-left: 20px; margin: 0; }
-    .modal-body li { margin-bottom: 8px; }
 
-    /* Setup & Main */
     .setup-area { background: var(--panel-bg); padding: 20px 40px; border: 2px solid var(--border-color); margin-bottom: 20px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
     .setup-row { display: flex; align-items: center; gap: 10px; }
     .setup-area input { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; width: 100px; font-size: 16px; text-align: center; font-weight: bold; }
@@ -57,32 +40,26 @@
     .hp-bar-fill { height: 100%; background: #00bfff; width: 100%; transition: width 0.5s ease-out, background-color 0.5s; }
 
     .vault-display { width: 100%; max-width: 320px; height: 320px; border: 4px solid #111; border-radius: 10px; position: relative; margin-bottom: 20px; flex-shrink: 0; background-color: #111; background-image: url('금고.jpg'); background-size: cover; background-position: center; box-shadow: inset 0 0 40px rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box; }
-    
-    /* 쉴드 & 룰렛 */
     .shield-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; box-sizing: border-box; border-radius: inherit; z-index: 10; backdrop-filter: blur(3px); }
     .shield-overlay h3 { color: #fff; margin: 0 0 10px 0; font-size: 22px; }
     .shield-overlay p { color: #fff; font-size: 16px; margin-bottom: 20px; font-weight: bold; text-shadow: 1px 1px 4px #000; word-break: keep-all; line-height: 1.4;}
-    .shield-btn-group button { margin: 0 5px; padding: 10px 20px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.5);}
+    .shield-btn-group button { margin: 0 5px; padding: 10px 20px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; border-radius: 4px; }
     .shield-phase-1 { border: 4px solid #00d2ff; animation: pulse-blue 1.5s infinite alternate ease-in-out; }
-    .shield-phase-1 h3 { text-shadow: 0 0 10px #00d2ff; }
     .shield-phase-2 { border: 5px solid #ff9800; animation: pulse-orange 1s infinite alternate ease-in-out; }
-    .shield-phase-2 h3 { text-shadow: 0 0 15px #ff9800; }
     .shield-phase-3 { border: 6px solid #ff0000; animation: pulse-red 0.6s infinite alternate ease-in-out; }
-    .shield-phase-3 h3 { text-shadow: 0 0 20px #ff0000; }
-    @keyframes pulse-blue { 0% { background: rgba(0, 150, 255, 0.1); box-shadow: inset 0 0 10px rgba(0, 150, 255, 0.2); } 100% { background: rgba(0, 150, 255, 0.4); box-shadow: inset 0 0 40px rgba(0, 150, 255, 0.8); } }
-    @keyframes pulse-orange { 0% { background: rgba(255, 152, 0, 0.15); box-shadow: inset 0 0 15px rgba(255, 152, 0, 0.3); } 100% { background: rgba(255, 152, 0, 0.5); box-shadow: inset 0 0 50px rgba(255, 152, 0, 0.9); } }
-    @keyframes pulse-red { 0% { background: rgba(255, 0, 0, 0.2); box-shadow: inset 0 0 20px rgba(255,0,0,0.5); } 100% { background: rgba(255, 0, 0, 0.6); box-shadow: inset 0 0 80px rgba(255,0,0,1); } }
+    @keyframes pulse-blue { 0% { box-shadow: inset 0 0 10px rgba(0, 150, 255, 0.2); } 100% { box-shadow: inset 0 0 40px rgba(0, 150, 255, 0.8); } }
+    @keyframes pulse-orange { 0% { box-shadow: inset 0 0 15px rgba(255, 152, 0, 0.3); } 100% { box-shadow: inset 0 0 50px rgba(255, 152, 0, 0.9); } }
+    @keyframes pulse-red { 0% { box-shadow: inset 0 0 20px rgba(255,0,0,0.5); } 100% { box-shadow: inset 0 0 80px rgba(255,0,0,1); } }
     .roulette-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); border-radius: 6px; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 20; }
     .roulette-title { color: var(--pubg-yellow); font-size: 24px; font-weight: bold; margin-bottom: 15px; }
-    .roulette-number { color: #fff; font-size: 42px; font-weight: 900; font-family: monospace; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+    .roulette-number { color: #fff; font-size: 42px; font-weight: 900; font-family: monospace; }
     .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
     @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
 
-    /* 입력 폼 */
     .input-section { position: relative; width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; }
     .input-elements { transition: filter 0.3s, opacity 0.3s; display: flex; flex-direction: column; width: 100%; }
     .input-section.shield-active .input-elements { filter: blur(6px); opacity: 0.3; pointer-events: none; }
-    .shield-notice { display: none; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(200, 20, 20, 0.95); color: #fff; padding: 15px 25px; border-radius: 8px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.8); z-index: 5; border: 2px solid #ff4d4d; width: 80%; line-height: 1.5; }
+    .shield-notice { display: none; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(200, 20, 20, 0.95); color: #fff; padding: 15px 25px; border-radius: 8px; text-align: center; z-index: 5; border: 2px solid #ff4d4d; width: 80%; }
     .shield-notice .main-txt { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
     .shield-notice .sub-txt { font-size: 13px; color: #ffb3b3; }
     .input-section.shield-active .shield-notice { display: block; }
@@ -91,18 +68,16 @@
     .player-info { display: flex; align-items: center; gap: 8px; flex: 1; }
     .color-picker { width: 25px; height: 25px; padding: 0; border: none; cursor: pointer; border-radius: 4px; background: transparent;}
     .name-input { background: transparent; border: none; color: var(--text-main); font-weight: bold; font-size: 15px; border-bottom: 1px dashed var(--border-color); width: 80px; }
-    .name-input:focus { outline: none; border-bottom: 1px solid var(--pubg-yellow); }
     .score-inputs { display: flex; gap: 5px; }
     .input-box { width: 60px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; text-align: center; font-size: 15px; font-weight: bold; }
     .action-row { display: flex; justify-content: space-between; margin-top: 15px; align-items: center; border-top: 1px solid var(--border-color); padding-top: 15px;}
     .chicken-check { display: flex; align-items: center; font-size: 16px; color: var(--pubg-yellow); font-weight: bold; cursor: pointer;}
-    .chicken-check input { width: 18px; height: 18px; margin-right: 8px; accent-color: var(--pubg-yellow); cursor: pointer;}
+    .chicken-check input { width: 18px; height: 18px; margin-right: 8px; accent-color: var(--pubg-yellow); }
     .btn-strike { background: #b02a2a; color: #fff; font-size: 18px; font-weight: bold; padding: 12px 30px; border: 2px solid #ff4d4d; border-radius: 5px; cursor: pointer; transition: 0.2s; }
-    .btn-strike:hover { background: #ff4d4d; box-shadow: 0 0 15px rgba(255,77,77,0.5); transform: scale(1.05); }
+    .btn-strike:hover { background: #ff4d4d; transform: scale(1.05); }
 
-    /* 로그 보드 */
     .log-board { flex: 1; background: var(--panel-bg); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; }
-    .log-board h3 { margin: 0 0 15px 0; color: var(--text-main); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; font-weight: 900; letter-spacing: 1px;}
+    .log-board h3 { margin: 0 0 15px 0; color: var(--text-main); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; font-weight: 900;}
     .log-content { flex: 1; overflow-y: auto; font-size: 14px; line-height: 1.5; padding-right: 5px; display: flex; flex-direction: column; gap: 8px; }
     details.log-entry { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; flex-shrink: 0;}
     details.log-entry summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 5px; outline: none; }
@@ -114,14 +89,12 @@
     .log-normal .log-title { color: var(--text-main); }
     .log-crit .log-title { color: #ff9800; }
     .log-chicken .log-title { color: var(--log-sys); font-size: 16px; }
-    .log-shield-warn { color: var(--log-warn); font-weight: bold; font-size: 15px; margin-bottom: 4px; display: block;}
+    .log-shield-warn { color: var(--log-warn); font-weight: bold; font-size: 15px; display: block;}
     .log-shield-success { color: var(--pubg-green); font-weight: bold; display: block;}
     .log-shield-fail { color: var(--pubg-red); font-weight: bold; display: block;}
     .log-shield-buff { color: var(--text-main); font-size: 13px; margin-top: 4px; display: block;}
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -135,16 +108,10 @@
         <div class="modal-body">
             <h3>[기본 규칙]</h3>
             <ul>
-                <li><strong>목표:</strong> 배그 인게임에서 기록한 '킬'과 '딜량'을 포인트로 환산하여 금고의 체력을 0으로 만듭니다.</li>
+                <li><strong>목표:</strong> 배그 킬/딜량을 환산하여 금고 파괴</li>
                 <li><strong>데미지:</strong> 1딜 = 1점 / 1킬 = 200~400점 랜덤</li>
-                <li>🍗 <strong>치킨:</strong> 치킨 달성 시 해당 판 획득 데미지 2배 적용</li>
-                <li>⚡ <strong>크리티컬:</strong> 타격 시 10% 확률로 데미지 1.5배 증가</li>
-            </ul>
-            <h3>[🛡️ 금고 비상 쉴드 (돌발 미션)]</h3>
-            <ul>
-                <li>금고 체력 66%, 33%, 10% 이하 도달 시 비상 쉴드 가동</li>
-                <li>✅ <strong>성공:</strong> 다음 타격 크리티컬(1.5배) 확률 50% 버프</li>
-                <li>❌ <strong>실패:</strong> 페널티로 금고 체력 5% 회복</li>
+                <li>🍗 <strong>치킨:</strong> 해당 판 데미지 2배</li>
+                <li>⚡ <strong>크리티컬:</strong> 10% 확률로 데미지 1.5배</li>
             </ul>
         </div>
     </div>
@@ -159,18 +126,12 @@
     <button class="btn-reset-custom" onclick="window.resetGame()">🧹 시트지 초기화</button>
 </div>
 
-<div class="header">
-    <h1>금고 털기</h1>
-</div>
+<div class="header"><h1>금고 털기</h1></div>
 
 <div class="setup-area" id="setupArea">
-    <div class="setup-row">
-        <label>금고 체력: </label>
-        <input type="number" id="initHp" value="50000" step="1000">
-    </div>
+    <div class="setup-row"><label>금고 체력: </label><input type="number" id="initHp" value="50000" step="1000"></div>
     <div class="setup-row" style="color:var(--pubg-yellow); font-weight:bold;">
-        <span>💰 금괴 보상: </span>
-        <input type="number" id="minReward" value="5000"> 개 ~ <input type="number" id="maxReward" value="20000"> 개
+        <span>💰 금괴 보상: </span><input type="number" id="minReward" value="5000"> 개 ~ <input type="number" id="maxReward" value="20000"> 개
     </div>
     <button onclick="window.startGame()">레이드 시작</button>
 </div>
@@ -184,27 +145,21 @@
 
         <div class="vault-display" id="vaultImg">
             <div class="shield-overlay" id="shieldUI">
-                <h3>🛡️ 쉴드 가동</h3>
-                <p id="shieldDesc">미션 로딩 중...</p>
+                <h3>🛡️ 쉴드 가동</h3><p id="shieldDesc">미션 로딩 중...</p>
                 <div class="shield-btn-group" id="shieldBtnGroup">
-                    <button onclick="window.resolveShield(true)" style="background:var(--pubg-green); color:white; border:2px solid #2e7d32; border-radius:6px;">미션 성공</button>
-                    <button onclick="window.resolveShield(false)" style="background:var(--pubg-red); color:white; border:2px solid #b71c1c; border-radius:6px;">실패 (5% 회복)</button>
+                    <button onclick="window.resolveShield(true)" style="background:var(--pubg-green); color:white; border:2px solid #2e7d32; border-radius:6px;">성공</button>
+                    <button onclick="window.resolveShield(false)" style="background:var(--pubg-red); color:white; border:2px solid #b71c1c; border-radius:6px;">실패</button>
                 </div>
             </div>
             <div class="roulette-overlay" id="rouletteUI">
-                <div class="roulette-title">💰 보상 추첨 중...</div>
-                <div class="roulette-number" id="rouletteNumber">00000</div>
+                <div class="roulette-title">💰 보상 추첨 중...</div><div class="roulette-number" id="rouletteNumber">00000</div>
             </div>
         </div>
 
         <div class="input-section" id="inputSectionWrapper">
-            <div class="shield-notice">
-                <div class="main-txt">금고가 위험을 감지하고 쉴드를 발동했습니다.<br>미션을 클리어해서 쉴드를 제거하세요.</div>
-                <div class="sub-txt">(실패 시 체력의 5%가 회복됩니다.)</div>
-            </div>
+            <div class="shield-notice"><div class="main-txt">쉴드 발동! 미션을 클리어하세요.</div><div class="sub-txt">(실패 시 5% 회복)</div></div>
             
             <div class="input-elements">
-                <!-- 플레이어 1~4 (ID 부여 및 입력 이벤트 연결) -->
                 <script>
                     for(let i=0; i<4; i++) {
                         document.write(`
@@ -221,7 +176,7 @@
                     }
                 </script>
                 <div class="action-row">
-                    <label class="chicken-check" for="chkChicken"><input type="checkbox" id="chkChicken" onchange="window.updateChicken(this.checked)"> 🍗 치킨 달성 (데미지 2배)</label>
+                    <label class="chicken-check"><input type="checkbox" id="chkChicken" onchange="window.updateChicken(this.checked)"> 🍗 치킨 달성</label>
                     <button class="btn-strike" id="btnStrike" onclick="window.strikeVault()">💥 타격하기</button>
                 </div>
             </div>
@@ -229,78 +184,50 @@
     </div>
 
     <div class="log-board">
-        <h3>ACTION LOG</h3>
-        <div class="log-content" id="logContent"></div>
+        <h3>ACTION LOG</h3><div class="log-content" id="logContent"></div>
     </div>
 </div>
 
 <script type="module">
-    // 🔥 Firebase 연동 모듈 불러오기
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
+    const app = initializeApp(firebaseConfig); const db = getFirestore(app);
     const roomId = new URLSearchParams(window.location.search).get('room') || "default_vault_coop";
     const roomRef = doc(db, "vault_rooms", roomId);
 
-    // 서버와 공유될 통합 상태 객체
     let state = {
         isStarted: false, maxHp: 50000, currentHp: 50000, minReward: 5000, maxReward: 20000,
         critBuff: false, shieldPhase: 0, activeShield: false, currentMission: "",
         logs: [], isGameOver: false, finalReward: 0, shakeTrigger: 0,
-        // ✅ 플레이어 입력값 실시간 동기화 배열
         players: [
-            { name: "Player 1", color: "#f2a900", kill: "", dmg: "" },
-            { name: "Player 2", color: "#388e3c", kill: "", dmg: "" },
-            { name: "Player 3", color: "#00d2ff", kill: "", dmg: "" },
-            { name: "Player 4", color: "#d32f2f", kill: "", dmg: "" }
+            { name: "Player 1", color: "#f2a900", kill: "", dmg: "", totalK: 0, totalD: 0 },
+            { name: "Player 2", color: "#388e3c", kill: "", dmg: "", totalK: 0, totalD: 0 },
+            { name: "Player 3", color: "#00d2ff", kill: "", dmg: "", totalK: 0, totalD: 0 },
+            { name: "Player 4", color: "#d32f2f", kill: "", dmg: "", totalK: 0, totalD: 0 }
         ],
         isChicken: false
     };
 
-    let localShakeTrigger = 0;
-    let isRoulettePlayed = false;
+    let localShakeTrigger = 0; let isRoulettePlayed = false;
+    const missions = { 1: ["투척무기 1킬", "팀 합산 5킬", "팀 합산 500딜", "차 없이 탑 20 생존", "SR 1킬"], 2: ["투척무기 3킬", "팀 합산 8킬", "팀 합산 1000딜", "차 없이 탑 10 생존", "판처파우스트 1킬"], 3: ["C4/근접투척 1킬", "팀 합산 11킬", "팀 합산 1500딜", "차 없이 탑 5 생존", "권총 1킬"] };
 
-    const missions = {
-        1: ["투척무기 1킬", "팀 합산 5킬", "팀 합산 500딜", "차 없이 탑 20 생존", "SR 1킬"],
-        2: ["투척무기 3킬", "팀 합산 8킬", "팀 합산 1000딜", "차 없이 탑 10 생존", "판처파우스트 1킬"],
-        3: ["C4/근접투척 1킬", "팀 합산 11킬", "팀 합산 1500딜", "차 없이 탑 5 생존", "권총 1킬"]
-    };
-
-    // 실시간 서버 데이터 수신
-    onSnapshot(roomRef, (snap) => {
-        const data = snap.data();
-        if (data) { state = data; updateUI(); }
-    });
-
+    onSnapshot(roomRef, (snap) => { const data = snap.data(); if (data) { state = data; updateUI(); } });
     async function syncData() { await setDoc(roomRef, state); }
 
-    // ✅ 사용자가 킬/딜/이름을 치면 서버로 쏨
-    window.updateInput = (index, field, value) => {
-        state.players[index][field] = value;
-        syncData();
-    };
-
-    window.updateChicken = (isChecked) => {
-        state.isChicken = isChecked;
-        syncData();
-    };
+    window.updateInput = (index, field, value) => { state.players[index][field] = value; syncData(); };
+    window.updateChicken = (isChecked) => { state.isChicken = isChecked; syncData(); };
 
     window.startGame = () => {
-        let hp = parseInt(document.getElementById('initHp').value);
-        let minR = parseInt(document.getElementById('minReward').value);
-        let maxR = parseInt(document.getElementById('maxReward').value);
-        if(isNaN(hp) || hp <= 0) { alert("올바른 체력을 입력하세요."); return; }
-        if(minR > maxR) { alert("보상 범위가 잘못되었습니다."); return; }
+        let hp = parseInt(document.getElementById('initHp').value); let minR = parseInt(document.getElementById('minReward').value); let maxR = parseInt(document.getElementById('maxReward').value);
+        if(isNaN(hp) || hp <= 0 || minR > maxR) return alert("설정값을 확인하세요.");
 
         state.isStarted = true; state.maxHp = hp; state.currentHp = hp; state.minReward = minR; state.maxReward = maxR;
         state.critBuff = false; state.shieldPhase = 0; state.activeShield = false; state.currentMission = "";
         state.isGameOver = false; state.finalReward = 0; state.shakeTrigger = 0;
         state.logs = [`<details class="log-entry log-sys" open><summary><div class="log-title">[SYSTEM] 금고 레이드가 시작되었습니다.</div></summary><div class="log-detail-content">목표 체력: ${hp.toLocaleString()} HP</div></details>`];
-        state.players.forEach(p => { p.kill = ""; p.dmg = ""; }); state.isChicken = false;
+        state.players.forEach(p => { p.kill = ""; p.dmg = ""; p.totalK = 0; p.totalD = 0; }); state.isChicken = false;
         syncData();
     };
 
@@ -310,41 +237,34 @@
         if(state.activeShield || state.isGameOver) return;
         
         let totalK = 0, totalD = 0;
+        // ✅ 누적 스탯 업데이트
         state.players.forEach(p => {
-            totalK += parseInt(p.kill || 0);
-            totalD += parseInt(p.dmg || 0);
+            let k = parseInt(p.kill || 0); let d = parseInt(p.dmg || 0);
+            totalK += k; totalD += d;
+            p.totalK += k; p.totalD += d;
         });
         
-        if(totalK === 0 && totalD === 0) { alert("값을 입력하세요."); return; }
+        if(totalK === 0 && totalD === 0) return alert("값을 입력하세요.");
 
         let killDmg = 0; let killDetails = [];
         for(let i=0; i<totalK; i++) { let r = Math.floor(Math.random() * 201) + 200; killDmg += r; killDetails.push(r); }
-        let baseTotal = killDmg + totalD;
-        let finalDmg = 0; let logTitle = ""; let logClass = "log-normal";
+        let baseTotal = killDmg + totalD; let finalDmg = 0; let logTitle = ""; let logClass = "log-normal";
 
-        if (state.isChicken) {
-            finalDmg = baseTotal * 2; logTitle = `🍗 치킨 달성! (x2)`; logClass = "log-chicken"; state.critBuff = false; 
+        if (state.isChicken) { finalDmg = baseTotal * 2; logTitle = `🍗 치킨 달성! (x2)`; logClass = "log-chicken"; state.critBuff = false; 
         } else {
             let isCrit = Math.random() < (state.critBuff ? 0.5 : 0.1);
-            if (isCrit) {
-                finalDmg = Math.floor(baseTotal * 1.5); logTitle = `⚡ 크리티컬 히트! (x1.5)`;
-                if(state.critBuff) logTitle = `[버프적용] ` + logTitle;
-                logClass = "log-crit";
+            if (isCrit) { finalDmg = Math.floor(baseTotal * 1.5); logTitle = `⚡ 크리티컬 히트! (x1.5)`; if(state.critBuff) logTitle = `[버프적용] ` + logTitle; logClass = "log-crit";
             } else { finalDmg = baseTotal; logTitle = `💥 일반 타격`; }
             state.critBuff = false; 
         }
 
-        state.currentHp -= finalDmg;
-        if(state.currentHp < 0) state.currentHp = 0;
+        state.currentHp -= finalDmg; if(state.currentHp < 0) state.currentHp = 0;
 
         let detailHtml = `<div class="log-detail-content">🔸 팀 합산 기록: ${totalK}킬 / ${totalD}딜<br>🔸 킬 타격(${killDmg}점): [${killDetails.join(', ')}]<br>🔸 딜량 타격: ${totalD}점</div>`;
         state.logs.push(`<details class="log-entry ${logClass}"><summary><div class="log-title">${logTitle}</div><div class="log-dmg">➔ 💥 ${finalDmg.toLocaleString()} 타격</div></summary>${detailHtml}</details>`);
         state.shakeTrigger++;
 
-        // 타격 후 모든 플레이어 입력칸 싹 비우기
-        state.players.forEach(p => { p.kill = ""; p.dmg = ""; });
-        state.isChicken = false;
-
+        state.players.forEach(p => { p.kill = ""; p.dmg = ""; }); state.isChicken = false;
         checkState(); syncData();
     };
 
@@ -358,21 +278,23 @@
             state.isGameOver = true;
             state.finalReward = Math.floor(Math.random() * (state.maxReward - state.minReward + 1) + state.minReward);
             state.logs.push(`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:18px;">🎉 금고 파괴 성공!! 레이드 종료!!</div></summary></details>`);
+            
+            // ✅ 최종 개인 스탯 로그 추가
+            let statsHtml = state.players.map(p => `<strong style="color:${p.color};">${p.name}</strong> : ${p.totalK}킬 / ${p.totalD.toLocaleString()}딜`).join('<br>');
+            state.logs.push(`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:16px;">📊 최종 레이드 기여도 (개인 스탯)</div></summary><div class="log-detail-content" style="font-size:14px; line-height:1.8;">${statsHtml}</div></details>`);
         }
     }
 
     function triggerShield(phaseNum, percent) {
         state.shieldPhase = phaseNum; state.activeShield = true;
-        let pool = missions[phaseNum];
-        state.currentMission = pool[Math.floor(Math.random() * pool.length)];
+        let pool = missions[phaseNum]; state.currentMission = pool[Math.floor(Math.random() * pool.length)];
         state.logs.push(`<details class="log-entry" open><summary><span class="log-shield-warn">🚨 [경고] 금고 체력 ${percent}% 구간! 쉴드 가동!</span></summary><div class="log-detail-content">미션: ${state.currentMission}</div></details>`);
     }
 
     window.resolveShield = (isSuccess) => {
         state.activeShield = false;
         if (isSuccess) {
-            state.critBuff = true;
-            state.logs.push(`<details class="log-entry"><summary><span class="log-shield-success">✅ [미션 성공] 방어막 해제!</span><span class="log-shield-buff">➔ 다음 타격 크리티컬 확률 5배 (50%) 버프 적용!</span></summary></details>`);
+            state.critBuff = true; state.logs.push(`<details class="log-entry"><summary><span class="log-shield-success">✅ [미션 성공] 방어막 해제!</span><span class="log-shield-buff">➔ 다음 타격 크리티컬 확률 5배 (50%) 버프 적용!</span></summary></details>`);
             if(state.shieldPhase === 3 && state.currentHp <= 0) checkState();
         } else {
             let heal = Math.floor(state.maxHp * 0.05); state.currentHp += heal; if(state.currentHp > state.maxHp) state.currentHp = state.maxHp;
@@ -382,21 +304,13 @@
     };
 
     function updateUI() {
-        if(!state.isStarted) {
-            document.getElementById('setupArea').style.display = 'flex'; document.getElementById('mainContainer').style.display = 'none';
-            isRoulettePlayed = false; document.getElementById('rouletteUI').style.display = 'none'; return;
-        }
-
+        if(!state.isStarted) { document.getElementById('setupArea').style.display = 'flex'; document.getElementById('mainContainer').style.display = 'none'; isRoulettePlayed = false; document.getElementById('rouletteUI').style.display = 'none'; return; }
         document.getElementById('setupArea').style.display = 'none'; document.getElementById('mainContainer').style.display = 'flex';
         document.getElementById('maxHpText').innerText = state.maxHp.toLocaleString(); document.getElementById('currentHpText').innerText = state.currentHp.toLocaleString();
         
-        let pct = (state.currentHp / state.maxHp) * 100;
-        let bar = document.getElementById('hpBar'); bar.style.width = pct + '%';
-        if (pct > 50) { bar.style.backgroundColor = '#00bfff'; } else {
-            let ratio = pct / 50; let r = Math.floor(139 + (116 * ratio)); let g = Math.floor(69 * ratio); bar.style.backgroundColor = `rgb(${r}, ${g}, 0)`;
-        }
+        let pct = (state.currentHp / state.maxHp) * 100; let bar = document.getElementById('hpBar'); bar.style.width = pct + '%';
+        if (pct > 50) { bar.style.backgroundColor = '#00bfff'; } else { let ratio = pct / 50; let r = Math.floor(139 + (116 * ratio)); let g = Math.floor(69 * ratio); bar.style.backgroundColor = `rgb(${r}, ${g}, 0)`; }
 
-        // ✅ 입력창 실시간 화면 반영 (커서가 있는 곳은 방해 안함)
         for (let i = 0; i < 4; i++) {
             let p = state.players[i];
             if (document.activeElement.id !== `pName${i}`) document.getElementById(`pName${i}`).value = p.name;
@@ -409,27 +323,18 @@
         const shieldUI = document.getElementById('shieldUI'); const inputWrapper = document.getElementById('inputSectionWrapper');
         if(state.activeShield && !state.isGameOver) {
             shieldUI.className = `shield-overlay shield-phase-${state.shieldPhase}`; shieldUI.style.display = 'flex';
-            document.getElementById('shieldDesc').innerText = `🎯 [미션] ${state.currentMission}`; inputWrapper.classList.add('shield-active');
-            document.getElementById('shieldBtnGroup').style.display = 'block';
+            document.getElementById('shieldDesc').innerText = `🎯 [미션] ${state.currentMission}`; inputWrapper.classList.add('shield-active'); document.getElementById('shieldBtnGroup').style.display = 'block';
         } else { shieldUI.style.display = 'none'; inputWrapper.classList.remove('shield-active'); }
 
         document.getElementById('btnStrike').disabled = state.isGameOver;
-        document.getElementById('logContent').innerHTML = state.logs.join('');
-        document.getElementById('logContent').scrollTop = document.getElementById('logContent').scrollHeight;
+        document.getElementById('logContent').innerHTML = state.logs.join(''); document.getElementById('logContent').scrollTop = document.getElementById('logContent').scrollHeight;
 
-        if(state.shakeTrigger > localShakeTrigger) {
-            localShakeTrigger = state.shakeTrigger; const vault = document.getElementById('vaultImg');
-            vault.classList.remove('shake'); void vault.offsetWidth; vault.classList.add('shake');
-        }
-
-        if(state.isGameOver && state.finalReward > 0 && !isRoulettePlayed) {
-            isRoulettePlayed = true; playRoulette(state.finalReward);
-        }
+        if(state.shakeTrigger > localShakeTrigger) { localShakeTrigger = state.shakeTrigger; const vault = document.getElementById('vaultImg'); vault.classList.remove('shake'); void vault.offsetWidth; vault.classList.add('shake'); }
+        if(state.isGameOver && state.finalReward > 0 && !isRoulettePlayed) { isRoulettePlayed = true; playRoulette(state.finalReward); }
     }
 
     function playRoulette(finalResult) {
-        const ui = document.getElementById('rouletteUI'); const num = document.getElementById('rouletteNumber'); ui.style.display = 'flex';
-        let ticks = 0;
+        const ui = document.getElementById('rouletteUI'); const num = document.getElementById('rouletteNumber'); ui.style.display = 'flex'; let ticks = 0;
         let timer = setInterval(() => {
             num.innerText = Math.floor(Math.random() * (state.maxReward - state.minReward + 1) + state.minReward).toLocaleString(); ticks++;
             if (ticks > 50) { 
