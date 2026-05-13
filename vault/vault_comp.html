@@ -11,7 +11,6 @@
     input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; }
 
-    /* 상단 / 헤더 / 모달 등 (이전 V9과 CSS 완전 동일) */
     .top-controls { width: 1100px; max-width: 100%; display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
     .btn-basic { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight:bold;}
     .btn-rule { background: #005f99; color: white; border: 2px solid #008be0; padding: 6px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s;}
@@ -111,7 +110,7 @@
 
 <div class="global-win-overlay" id="globalWinOverlay">
     <h2 id="globalWinText">WINNER TEAM 승리!!</h2>
-    <p>모든 금고의 잠금이 해제되었습니다. 레이드가 종료됩니다.</p>
+    <p>모든 금고의 잠금이 해제되었습니다. 레이 편집 종료됩니다.</p>
     <button class="btn-restart-game" onclick="window.resetGame()">새로운 대결 시작</button>
 </div>
 
@@ -165,7 +164,7 @@
             <div class="team-vault-container">
                 <div class="team-header">
                     <input type="color" class="team-color-picker" id="t1Color" value="#00a8ff" onchange="window.updateTeamInfo(1)">
-                    <input type="text" class="team-name-input t1-name" id="t1Name" value="TEAM 1" onchange="window.updateTeamInfo(1)">
+                    <input type="text" class="team-name-input t1-name" id="t1Name" value="TEAM 1" oninput="window.updateTeamInfo(1)">
                 </div>
                 <div class="hp-text"><span id="hpText1">50,000</span></div>
                 <div class="hp-bar-bg"><div class="hp-bar-fill" id="hpBar1"></div></div>
@@ -183,7 +182,7 @@
             <div class="team-vault-container">
                 <div class="team-header">
                     <input type="color" class="team-color-picker" id="t2Color" value="#e84118" onchange="window.updateTeamInfo(2)">
-                    <input type="text" class="team-name-input t2-name" id="t2Name" value="TEAM 2" onchange="window.updateTeamInfo(2)">
+                    <input type="text" class="team-name-input t2-name" id="t2Name" value="TEAM 2" oninput="window.updateTeamInfo(2)">
                 </div>
                 <div class="hp-text"><span id="hpText2">50,000</span></div>
                 <div class="hp-bar-bg"><div class="hp-bar-fill" id="hpBar2"></div></div>
@@ -213,12 +212,19 @@
             <!-- Team 1 폼 -->
             <div class="tab-content active" id="tab1">
                 <script>
-                    for(let i=1; i<=4; i++) {
-                        document.write(`<div class="player-row"><input type="text" class="p-name-input" value="Player ${i}"><div class="score-inputs"><input type="number" class="input-box t1-k" placeholder="킬"><input type="number" class="input-box t1-d" placeholder="딜량"></div></div>`);
+                    for(let i=0; i<4; i++) {
+                        document.write(`
+                        <div class="player-row">
+                            <input type="text" class="p-name-input" id="t1pName${i}" oninput="window.updateInput(1, ${i}, 'name', this.value)">
+                            <div class="score-inputs">
+                                <input type="number" class="input-box" id="t1pKill${i}" oninput="window.updateInput(1, ${i}, 'k', this.value)" placeholder="킬">
+                                <input type="number" class="input-box" id="t1pDmg${i}" oninput="window.updateInput(1, ${i}, 'd', this.value)" placeholder="딜량">
+                            </div>
+                        </div>`);
                     }
                 </script>
                 <div class="action-row">
-                    <label class="chicken-check"><input type="checkbox" id="chkChicken1"> 🍗 치킨 달성</label>
+                    <label class="chicken-check"><input type="checkbox" id="chkChicken1" onchange="window.updateChicken(1, this.checked)"> 🍗 치킨 달성</label>
                     <button class="btn-strike" id="btnStrike1" onclick="window.strikeVault(1)">💥 타격하기</button>
                 </div>
             </div>
@@ -226,12 +232,19 @@
             <!-- Team 2 폼 -->
             <div class="tab-content" id="tab2">
                 <script>
-                    for(let i=1; i<=4; i++) {
-                        document.write(`<div class="player-row"><input type="text" class="p-name-input" value="Player ${i}"><div class="score-inputs"><input type="number" class="input-box t2-k" placeholder="킬"><input type="number" class="input-box t2-d" placeholder="딜량"></div></div>`);
+                    for(let i=0; i<4; i++) {
+                        document.write(`
+                        <div class="player-row">
+                            <input type="text" class="p-name-input" id="t2pName${i}" oninput="window.updateInput(2, ${i}, 'name', this.value)">
+                            <div class="score-inputs">
+                                <input type="number" class="input-box" id="t2pKill${i}" oninput="window.updateInput(2, ${i}, 'k', this.value)" placeholder="킬">
+                                <input type="number" class="input-box" id="t2pDmg${i}" oninput="window.updateInput(2, ${i}, 'd', this.value)" placeholder="딜량">
+                            </div>
+                        </div>`);
                     }
                 </script>
                 <div class="action-row">
-                    <label class="chicken-check"><input type="checkbox" id="chkChicken2"> 🍗 치킨 달성</label>
+                    <label class="chicken-check"><input type="checkbox" id="chkChicken2" onchange="window.updateChicken(2, this.checked)"> 🍗 치킨 달성</label>
                     <button class="btn-strike" id="btnStrike2" onclick="window.strikeVault(2)">💥 타격하기</button>
                 </div>
             </div>
@@ -256,12 +269,20 @@
     const roomId = new URLSearchParams(window.location.search).get('room') || "default_vault_comp";
     const roomRef = doc(db, "vault_comp_rooms", roomId);
 
-    // 서버 공유 상태 데이터
+    // 서버 공유 상태 데이터 (플레이어 입력칸 동기화 포함)
     let state = {
         isStarted: false, maxHp: 50000,
         teams: {
-            1: { hp: 50000, phase: 0, buff: false, activeShield: false, mission: "", name: "TEAM 1", color: "#00a8ff" },
-            2: { hp: 50000, phase: 0, buff: false, activeShield: false, mission: "", name: "TEAM 2", color: "#e84118" }
+            1: { 
+                hp: 50000, phase: 0, buff: false, activeShield: false, mission: "", name: "TEAM 1", color: "#00a8ff",
+                players: [{name: "Player 1", k:"", d:""},{name: "Player 2", k:"", d:""},{name: "Player 3", k:"", d:""},{name: "Player 4", k:"", d:""}],
+                isChicken: false
+            },
+            2: { 
+                hp: 50000, phase: 0, buff: false, activeShield: false, mission: "", name: "TEAM 2", color: "#e84118",
+                players: [{name: "Player 1", k:"", d:""},{name: "Player 2", k:"", d:""},{name: "Player 3", k:"", d:""},{name: "Player 4", k:"", d:""}],
+                isChicken: false
+            }
         },
         logs: [], isGameOver: false, winnerId: 0, shakeTrigger: {1:0, 2:0}
     };
@@ -282,6 +303,17 @@
 
     async function syncData() { await setDoc(roomRef, state); }
 
+    // ✅ 사용자가 입력할 때마다 즉시 서버 연동
+    window.updateInput = (teamId, playerIdx, field, value) => {
+        state.teams[teamId].players[playerIdx][field] = value;
+        syncData();
+    };
+
+    window.updateChicken = (teamId, isChecked) => {
+        state.teams[teamId].isChicken = isChecked;
+        syncData();
+    };
+
     window.updateTeamInfo = (teamId) => {
         state.teams[teamId].name = document.getElementById(`t${teamId}Name`).value;
         state.teams[teamId].color = document.getElementById(`t${teamId}Color`).value;
@@ -292,15 +324,14 @@
         let hp = parseInt(document.getElementById('initHp').value);
         if(isNaN(hp) || hp <= 0) return alert("올바른 체력을 입력하세요.");
         
-        state.maxHp = hp;
-        state.isStarted = true;
-        state.isGameOver = false;
-        state.winnerId = 0;
+        state.maxHp = hp; state.isStarted = true; state.isGameOver = false; state.winnerId = 0;
         state.logs = [`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:18px;">⚔️ 4 VS 4 대결 레이드가 시작되었습니다!</div></summary><div class="log-detail-content">목표 체력: ${hp.toLocaleString()} HP</div></details>`];
         
         [1, 2].forEach(id => {
             state.teams[id].hp = hp; state.teams[id].phase = 0;
             state.teams[id].buff = false; state.teams[id].activeShield = false;
+            state.teams[id].players.forEach(p => { p.k = ""; p.d = ""; });
+            state.teams[id].isChicken = false;
         });
         syncData();
     };
@@ -330,10 +361,12 @@
 
     window.strikeVault = (teamId) => {
         if(state.isGameOver || state.teams[teamId].activeShield) return;
+        
         let totalK = 0, totalD = 0;
-        document.querySelectorAll(`.t${teamId}-k`).forEach(el => totalK += parseInt(el.value || 0));
-        document.querySelectorAll(`.t${teamId}-d`).forEach(el => totalD += parseInt(el.value || 0));
-        let isChicken = document.getElementById(`chkChicken${teamId}`).checked;
+        state.teams[teamId].players.forEach(p => {
+            totalK += parseInt(p.k || 0);
+            totalD += parseInt(p.d || 0);
+        });
 
         if(totalK === 0 && totalD === 0) return alert("값을 입력하세요.");
 
@@ -342,7 +375,7 @@
         let baseTotal = killDmg + totalD;
         let finalDmg = 0; let logTxt = ""; let logClass = "log-normal";
 
-        if (isChicken) {
+        if (state.teams[teamId].isChicken) {
             finalDmg = baseTotal * 2; logTxt = `🍗 치킨 달성! (x2)`; logClass = "log-chicken"; state.teams[teamId].buff = false;
         } else {
             let isCrit = Math.random() < (state.teams[teamId].buff ? 0.5 : 0.1);
@@ -362,8 +395,9 @@
         state.logs.push(`<details class="log-entry ${logClass}"><summary><div class="log-title">${tNameHtml} ${logTxt}</div><div class="log-dmg">➔ 💥 ${finalDmg.toLocaleString()} 타격</div></summary>${detailHtml}</details>`);
         state.shakeTrigger[teamId]++;
 
-        document.querySelectorAll(`.t${teamId}-k, .t${teamId}-d`).forEach(el => el.value = '');
-        document.getElementById(`chkChicken${teamId}`).checked = false;
+        // 타격 후 팀의 입력칸 비우기
+        state.teams[teamId].players.forEach(p => { p.k = ""; p.d = ""; });
+        state.teams[teamId].isChicken = false;
 
         checkPhase(teamId); syncData();
     };
@@ -413,11 +447,20 @@
         [1, 2].forEach(id => {
             let t = state.teams[id];
             
-            // 이름과 색상 동기화 (입력 중 커서 튐 방지)
+            // 팀명, 컬러
             if(document.activeElement.id !== `t${id}Name`) document.getElementById(`t${id}Name`).value = t.name;
             document.documentElement.style.setProperty(`--t${id}-color`, t.color);
             document.getElementById(`t${id}Color`).value = t.color;
             document.getElementById(`btnTab${id}`).innerHTML = `${id===1 ? '🟦' : '🟥'} ${t.name} 입력`;
+
+            // ✅ 개별 플레이어 입력칸 실시간 동기화
+            for (let i=0; i<4; i++) {
+                let p = t.players[i];
+                if(document.activeElement.id !== `t${id}pName${i}`) document.getElementById(`t${id}pName${i}`).value = p.name;
+                if(document.activeElement.id !== `t${id}pKill${i}`) document.getElementById(`t${id}pKill${i}`).value = p.k;
+                if(document.activeElement.id !== `t${id}pDmg${i}`) document.getElementById(`t${id}pDmg${i}`).value = p.d;
+            }
+            document.getElementById(`chkChicken${id}`).checked = t.isChicken;
 
             document.getElementById(`hpText${id}`).innerText = t.hp.toLocaleString();
             let pct = (t.hp / state.maxHp) * 100; document.getElementById(`hpBar${id}`).style.width = pct + '%';
