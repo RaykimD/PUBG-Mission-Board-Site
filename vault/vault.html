@@ -86,6 +86,7 @@
     .shield-notice .main-txt { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
     .shield-notice .sub-txt { font-size: 13px; color: #ffb3b3; }
     .input-section.shield-active .shield-notice { display: block; }
+    
     .player-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .player-info { display: flex; align-items: center; gap: 8px; flex: 1; }
     .color-picker { width: 25px; height: 25px; padding: 0; border: none; cursor: pointer; border-radius: 4px; background: transparent;}
@@ -203,25 +204,24 @@
             </div>
             
             <div class="input-elements">
-                <!-- 플레이어 1~4 -->
+                <!-- 플레이어 1~4 (ID 부여 및 입력 이벤트 연결) -->
                 <script>
-                    for(let i=1; i<=4; i++) {
-                        let colors = ['#f2a900', '#388e3c', '#00d2ff', '#d32f2f'];
+                    for(let i=0; i<4; i++) {
                         document.write(`
                         <div class="player-row">
                             <div class="player-info">
-                                <input type="color" class="color-picker" value="${colors[i-1]}">
-                                <input type="text" class="name-input" value="Player ${i}">
+                                <input type="color" class="color-picker" id="pColor${i}" onchange="window.updateInput(${i}, 'color', this.value)">
+                                <input type="text" class="name-input" id="pName${i}" oninput="window.updateInput(${i}, 'name', this.value)">
                             </div>
                             <div class="score-inputs">
-                                <input type="number" class="input-box p-kill" placeholder="킬">
-                                <input type="number" class="input-box p-dmg" placeholder="딜량">
+                                <input type="number" class="input-box" id="pKill${i}" oninput="window.updateInput(${i}, 'kill', this.value)" placeholder="킬">
+                                <input type="number" class="input-box" id="pDmg${i}" oninput="window.updateInput(${i}, 'dmg', this.value)" placeholder="딜량">
                             </div>
                         </div>`);
                     }
                 </script>
                 <div class="action-row">
-                    <label class="chicken-check" for="chkChicken"><input type="checkbox" id="chkChicken"> 🍗 치킨 달성 (데미지 2배)</label>
+                    <label class="chicken-check" for="chkChicken"><input type="checkbox" id="chkChicken" onchange="window.updateChicken(this.checked)"> 🍗 치킨 달성 (데미지 2배)</label>
                     <button class="btn-strike" id="btnStrike" onclick="window.strikeVault()">💥 타격하기</button>
                 </div>
             </div>
@@ -239,7 +239,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 빙고판에서 사용하시던 키값 그대로 연동
     const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -247,11 +246,19 @@
     const roomId = new URLSearchParams(window.location.search).get('room') || "default_vault_coop";
     const roomRef = doc(db, "vault_rooms", roomId);
 
-    // 서버와 공유될 통합 상태 객체 (이 값이 모두의 화면을 결정함)
+    // 서버와 공유될 통합 상태 객체
     let state = {
         isStarted: false, maxHp: 50000, currentHp: 50000, minReward: 5000, maxReward: 20000,
         critBuff: false, shieldPhase: 0, activeShield: false, currentMission: "",
-        logs: [], isGameOver: false, finalReward: 0, shakeTrigger: 0
+        logs: [], isGameOver: false, finalReward: 0, shakeTrigger: 0,
+        // ✅ 플레이어 입력값 실시간 동기화 배열
+        players: [
+            { name: "Player 1", color: "#f2a900", kill: "", dmg: "" },
+            { name: "Player 2", color: "#388e3c", kill: "", dmg: "" },
+            { name: "Player 3", color: "#00d2ff", kill: "", dmg: "" },
+            { name: "Player 4", color: "#d32f2f", kill: "", dmg: "" }
+        ],
+        isChicken: false
     };
 
     let localShakeTrigger = 0;
@@ -263,14 +270,24 @@
         3: ["C4/근접투척 1킬", "팀 합산 11킬", "팀 합산 1500딜", "차 없이 탑 5 생존", "권총 1킬"]
     };
 
-    // 실시간 서버 데이터 수신 (화면 동기화)
+    // 실시간 서버 데이터 수신
     onSnapshot(roomRef, (snap) => {
         const data = snap.data();
         if (data) { state = data; updateUI(); }
     });
 
-    // 서버로 데이터 쏘기
     async function syncData() { await setDoc(roomRef, state); }
+
+    // ✅ 사용자가 킬/딜/이름을 치면 서버로 쏨
+    window.updateInput = (index, field, value) => {
+        state.players[index][field] = value;
+        syncData();
+    };
+
+    window.updateChicken = (isChecked) => {
+        state.isChicken = isChecked;
+        syncData();
+    };
 
     window.startGame = () => {
         let hp = parseInt(document.getElementById('initHp').value);
@@ -279,12 +296,11 @@
         if(isNaN(hp) || hp <= 0) { alert("올바른 체력을 입력하세요."); return; }
         if(minR > maxR) { alert("보상 범위가 잘못되었습니다."); return; }
 
-        state = {
-            isStarted: true, maxHp: hp, currentHp: hp, minReward: minR, maxReward: maxR,
-            critBuff: false, shieldPhase: 0, activeShield: false, currentMission: "",
-            logs: [`<details class="log-entry log-sys" open><summary><div class="log-title">[SYSTEM] 금고 레이드가 시작되었습니다.</div></summary><div class="log-detail-content">목표 체력: ${hp.toLocaleString()} HP</div></details>`],
-            isGameOver: false, finalReward: 0, shakeTrigger: 0
-        };
+        state.isStarted = true; state.maxHp = hp; state.currentHp = hp; state.minReward = minR; state.maxReward = maxR;
+        state.critBuff = false; state.shieldPhase = 0; state.activeShield = false; state.currentMission = "";
+        state.isGameOver = false; state.finalReward = 0; state.shakeTrigger = 0;
+        state.logs = [`<details class="log-entry log-sys" open><summary><div class="log-title">[SYSTEM] 금고 레이드가 시작되었습니다.</div></summary><div class="log-detail-content">목표 체력: ${hp.toLocaleString()} HP</div></details>`];
+        state.players.forEach(p => { p.kill = ""; p.dmg = ""; }); state.isChicken = false;
         syncData();
     };
 
@@ -292,11 +308,13 @@
 
     window.strikeVault = () => {
         if(state.activeShield || state.isGameOver) return;
+        
         let totalK = 0, totalD = 0;
-        document.querySelectorAll('.p-kill').forEach(el => totalK += parseInt(el.value || 0));
-        document.querySelectorAll('.p-dmg').forEach(el => totalD += parseInt(el.value || 0));
-        const isChicken = document.getElementById('chkChicken').checked;
-
+        state.players.forEach(p => {
+            totalK += parseInt(p.kill || 0);
+            totalD += parseInt(p.dmg || 0);
+        });
+        
         if(totalK === 0 && totalD === 0) { alert("값을 입력하세요."); return; }
 
         let killDmg = 0; let killDetails = [];
@@ -304,7 +322,7 @@
         let baseTotal = killDmg + totalD;
         let finalDmg = 0; let logTitle = ""; let logClass = "log-normal";
 
-        if (isChicken) {
+        if (state.isChicken) {
             finalDmg = baseTotal * 2; logTitle = `🍗 치킨 달성! (x2)`; logClass = "log-chicken"; state.critBuff = false; 
         } else {
             let isCrit = Math.random() < (state.critBuff ? 0.5 : 0.1);
@@ -323,8 +341,9 @@
         state.logs.push(`<details class="log-entry ${logClass}"><summary><div class="log-title">${logTitle}</div><div class="log-dmg">➔ 💥 ${finalDmg.toLocaleString()} 타격</div></summary>${detailHtml}</details>`);
         state.shakeTrigger++;
 
-        document.querySelectorAll('.input-box').forEach(el => el.value = '');
-        document.getElementById('chkChicken').checked = false;
+        // 타격 후 모든 플레이어 입력칸 싹 비우기
+        state.players.forEach(p => { p.kill = ""; p.dmg = ""; });
+        state.isChicken = false;
 
         checkState(); syncData();
     };
@@ -376,6 +395,16 @@
         if (pct > 50) { bar.style.backgroundColor = '#00bfff'; } else {
             let ratio = pct / 50; let r = Math.floor(139 + (116 * ratio)); let g = Math.floor(69 * ratio); bar.style.backgroundColor = `rgb(${r}, ${g}, 0)`;
         }
+
+        // ✅ 입력창 실시간 화면 반영 (커서가 있는 곳은 방해 안함)
+        for (let i = 0; i < 4; i++) {
+            let p = state.players[i];
+            if (document.activeElement.id !== `pName${i}`) document.getElementById(`pName${i}`).value = p.name;
+            if (document.activeElement.id !== `pColor${i}`) document.getElementById(`pColor${i}`).value = p.color;
+            if (document.activeElement.id !== `pKill${i}`) document.getElementById(`pKill${i}`).value = p.kill;
+            if (document.activeElement.id !== `pDmg${i}`) document.getElementById(`pDmg${i}`).value = p.dmg;
+        }
+        document.getElementById('chkChicken').checked = state.isChicken;
 
         const shieldUI = document.getElementById('shieldUI'); const inputWrapper = document.getElementById('inputSectionWrapper');
         if(state.activeShield && !state.isGameOver) {
