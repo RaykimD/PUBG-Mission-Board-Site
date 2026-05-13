@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>금고 털기 - 협동 모드</title>
+<style>
+    :root {
+        --bg-color: #1a1816;
+        --panel-bg: #26221f;
+        --border-color: #4a453f;
+        --text-main: #e0dcd3;
+        --title-color: #ffffff;
+        --input-bg: #111;
+        --pubg-yellow: #f2a900;
+        --pubg-red: #d32f2f;
+        --pubg-green: #388e3c;
+        --log-warn: #00d2ff;
+        --log-sys: #f2a900;
+    }
+    
+    body.light-mode {
+        --bg-color: #f5f5f5;
+        --panel-bg: #ffffff;
+        --border-color: #cccccc;
+        --text-main: #222222;
+        --title-color: #111111;
+        --input-bg: #f9f9f9;
+        --log-warn: #007bb5; 
+        --log-sys: #cc7a00;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+        margin: 0; padding: 20px;
+        display: flex; flex-direction: column; align-items: center;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+
+    /* 상단 컨트롤 바 */
+    .top-controls { width: 1000px; max-width: 100%; display: flex; justify-content: space-between; margin-bottom: 30px; align-items: center; }
+    .room-info { display: flex; gap: 10px; align-items: center; }
+    .btn-basic { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn-basic:hover { background: var(--border-color); }
+    .btn-rule { background: #005f99; color: white; border: 2px solid #008be0; padding: 6px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+    .btn-rule:hover { background: #008be0; }
+    .btn-reset-custom { background-color: #d32f2f; color: white; border: 3px solid #666; padding: 8px 24px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+    .btn-reset-custom:hover { background-color: #b71c1c; border-color: #888; }
+
+    /* 타이틀 */
+    .header { text-align: center; margin-bottom: 25px; }
+    .header h1 { margin: 0; font-size: 46px; font-weight: 900; color: var(--pubg-yellow); letter-spacing: 2px; }
+
+    /* 룰 설명 모달 (팝업) UI */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000;
+        backdrop-filter: blur(3px);
+    }
+    .modal-content {
+        background: var(--panel-bg); border: 2px solid var(--pubg-yellow); border-radius: 12px;
+        width: 600px; max-width: 90%; max-height: 80vh; display: flex; flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8); overflow: hidden;
+    }
+    .modal-header { background: #111; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); }
+    .modal-header h2 { margin: 0; font-size: 20px; color: var(--pubg-yellow); }
+    .close-btn { background: transparent; border: none; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; line-height: 1;}
+    .close-btn:hover { color: #fff; }
+    .modal-body { padding: 20px 30px; overflow-y: auto; font-size: 15px; line-height: 1.6; color: var(--text-main); }
+    .modal-body h3 { color: #fff; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px;}
+    .modal-body h3:first-child { margin-top: 0; }
+    .modal-body ul { padding-left: 20px; margin: 0; }
+    .modal-body li { margin-bottom: 8px; }
+
+    /* Setup Area */
+    .setup-area { background: var(--panel-bg); padding: 20px 40px; border: 2px solid var(--border-color); margin-bottom: 20px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .setup-row { display: flex; align-items: center; gap: 10px; }
+    .setup-area input { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; width: 100px; font-size: 16px; text-align: center; font-weight: bold; }
+    .setup-area button { background: var(--pubg-yellow); color: #000; font-weight: bold; padding: 10px 30px; cursor: pointer; border: none; border-radius: 4px; font-size: 18px; margin-top: 10px; }
+
+    /* Main Container */
+    .main-container { display: none; width: 1000px; max-width: 100%; display: flex; gap: 20px; align-items: stretch; height: 720px; }
+    
+    /* Left: Game Board */
+    .game-board { flex: 1.2; background: var(--panel-bg); border: 2px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; align-items: center; position: relative; }
+
+    /* HP Bar */
+    .hp-wrapper { width: 100%; text-align: center; margin-bottom: 15px; }
+    .hp-text { font-size: 28px; font-weight: bold; font-family: monospace; letter-spacing: 2px; margin-bottom: 5px; }
+    .hp-bar-bg { width: 100%; height: 25px; background: #111; border: 2px solid #000; border-radius: 15px; overflow: hidden; }
+    .hp-bar-fill { height: 100%; background: #00bfff; width: 100%; transition: width 0.5s ease-out, background-color 0.5s; }
+
+    /* Vault Image Area */
+    .vault-display {
+        width: 100%; max-width: 320px; height: 320px; border: 4px solid #111; border-radius: 10px; position: relative; margin-bottom: 20px; flex-shrink: 0;
+        background-color: #111; background-image: url('금고.jpg'); background-size: cover; background-position: center; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+        display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box;
+    }
+
+    /* 쉴드 오버레이 */
+    .shield-overlay {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; padding: 10px; box-sizing: border-box; border-radius: inherit; z-index: 10; backdrop-filter: blur(3px);
+    }
+    .shield-overlay h3 { color: #fff; margin: 0 0 10px 0; font-size: 22px; }
+    .shield-overlay p { color: #fff; font-size: 16px; margin-bottom: 20px; font-weight: bold; text-shadow: 1px 1px 4px #000; word-break: keep-all; line-height: 1.4;}
+    .shield-btn-group button { margin: 0 5px; padding: 10px 20px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.5);}
+    
+    .shield-phase-1 { border: 4px solid #00d2ff; animation: pulse-blue 1.5s infinite alternate ease-in-out; }
+    .shield-phase-1 h3 { text-shadow: 0 0 10px #00d2ff; }
+    .shield-phase-2 { border: 5px solid #ff9800; animation: pulse-orange 1s infinite alternate ease-in-out; }
+    .shield-phase-2 h3 { text-shadow: 0 0 15px #ff9800; }
+    .shield-phase-3 { border: 6px solid #ff0000; animation: pulse-red 0.6s infinite alternate ease-in-out; }
+    .shield-phase-3 h3 { text-shadow: 0 0 20px #ff0000; }
+    
+    @keyframes pulse-blue { 0% { background: rgba(0, 150, 255, 0.1); box-shadow: inset 0 0 10px rgba(0, 150, 255, 0.2); } 100% { background: rgba(0, 150, 255, 0.4); box-shadow: inset 0 0 40px rgba(0, 150, 255, 0.8); } }
+    @keyframes pulse-orange { 0% { background: rgba(255, 152, 0, 0.15); box-shadow: inset 0 0 15px rgba(255, 152, 0, 0.3); } 100% { background: rgba(255, 152, 0, 0.5); box-shadow: inset 0 0 50px rgba(255, 152, 0, 0.9); } }
+    @keyframes pulse-red { 0% { background: rgba(255, 0, 0, 0.2); box-shadow: inset 0 0 20px rgba(255,0,0,0.5); } 100% { background: rgba(255, 0, 0, 0.6); box-shadow: inset 0 0 80px rgba(255,0,0,1); } }
+
+    /* 보상 룰렛 UI */
+    .roulette-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); border-radius: 6px; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 20; }
+    .roulette-title { color: var(--pubg-yellow); font-size: 24px; font-weight: bold; margin-bottom: 15px; }
+    .roulette-number { color: #fff; font-size: 42px; font-weight: 900; font-family: monospace; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+
+    .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
+
+    /* Input Area & Blur Effect */
+    .input-section { position: relative; width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+    .input-elements { transition: filter 0.3s, opacity 0.3s; display: flex; flex-direction: column; width: 100%; }
+    .input-section.shield-active .input-elements { filter: blur(6px); opacity: 0.3; pointer-events: none; }
+    
+    .shield-notice { 
+        display: none; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); 
+        background-color: rgba(200, 20, 20, 0.95); color: #fff; padding: 15px 25px; border-radius: 8px;
+        text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.8); z-index: 5; 
+        border: 2px solid #ff4d4d; width: 80%; line-height: 1.5;
+    }
+    .shield-notice .main-txt { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+    .shield-notice .sub-txt { font-size: 13px; color: #ffb3b3; }
+    .input-section.shield-active .shield-notice { display: block; }
+
+    /* 입력칸들 */
+    .player-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .player-info { display: flex; align-items: center; gap: 8px; flex: 1; }
+    .color-picker { width: 25px; height: 25px; padding: 0; border: none; cursor: pointer; border-radius: 4px; background: transparent;}
+    .name-input { background: transparent; border: none; color: var(--text-main); font-weight: bold; font-size: 15px; border-bottom: 1px dashed var(--border-color); width: 80px; }
+    .name-input:focus { outline: none; border-bottom: 1px solid var(--pubg-yellow); }
+    .score-inputs { display: flex; gap: 5px; }
+    .input-box { width: 60px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; text-align: center; font-size: 15px; font-weight: bold; }
+    
+    .action-row { display: flex; justify-content: space-between; margin-top: 15px; align-items: center; border-top: 1px solid var(--border-color); padding-top: 15px;}
+    .chicken-check { display: flex; align-items: center; font-size: 16px; color: var(--pubg-yellow); font-weight: bold; cursor: pointer;}
+    .chicken-check input { width: 18px; height: 18px; margin-right: 8px; accent-color: var(--pubg-yellow); cursor: pointer;}
+    .btn-strike { background: #b02a2a; color: #fff; font-size: 18px; font-weight: bold; padding: 12px 30px; border: 2px solid #ff4d4d; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+    .btn-strike:hover { background: #ff4d4d; box-shadow: 0 0 15px rgba(255,77,77,0.5); transform: scale(1.05); }
+
+    /* Right: Action Log */
+    .log-board { flex: 1; background: var(--panel-bg); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; }
+    .log-board h3 { margin: 0 0 15px 0; color: var(--text-main); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; font-weight: 900; letter-spacing: 1px;}
+    .log-content { flex: 1; overflow-y: auto; font-size: 14px; line-height: 1.5; padding-right: 5px; display: flex; flex-direction: column; gap: 8px; }
+    
+    details.log-entry { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; flex-shrink: 0;}
+    details.log-entry summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 5px; outline: none; }
+    details.log-entry summary::-webkit-details-marker { display: none; }
+    
+    .log-title { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 5px; }
+    .log-dmg { font-size: 14px; color: var(--text-main); margin-left: 5px; opacity: 0.9;}
+    .log-detail-content { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); font-size: 13px; color: #999; line-height: 1.6;}
+
+    .log-sys .log-title { color: var(--log-sys); }
+    .log-normal .log-title { color: var(--text-main); }
+    .log-crit .log-title { color: #ff9800; }
+    .log-chicken .log-title { color: var(--log-sys); font-size: 16px; }
+    
+    .log-shield-warn { color: var(--log-warn); font-weight: bold; font-size: 15px; margin-bottom: 4px; display: block;}
+    .log-shield-success { color: var(--pubg-green); font-weight: bold; display: block;}
+    .log-shield-fail { color: var(--pubg-red); font-weight: bold; display: block;}
+    .log-shield-buff { color: var(--text-main); font-size: 13px; margin-top: 4px; display: block;}
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- 룰 설명 모달 -->
+<div class="modal-overlay" id="ruleModal" onclick="closeModal(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📝 금고 털기 (Vault Heist) 룰 가이드</h2>
+            <button class="close-btn" onclick="document.getElementById('ruleModal').style.display='none'">×</button>
+        </div>
+        <div class="modal-body">
+            <h3>[기본 규칙]</h3>
+            <ul>
+                <li><strong>목표:</strong> 배그 인게임에서 기록한 '킬'과 '딜량'을 포인트로 환산하여, 금고의 체력을 <strong>0</strong>으로 만들어 파괴하는 것이 목표입니다.</li>
+                <li><strong>데미지 환산 방식:</strong>
+                    <ul>
+                        <li>🗡️ <strong>딜량:</strong> 1딜 = 1점 데미지 (정직한 딜링)</li>
+                        <li>🔫 <strong>킬:</strong> 1킬 = 200~400점 사이의 '랜덤 데미지' (킬을 많이 할수록 도파민 폭발!)</li>
+                        <li>🍗 <strong>치킨:</strong> 치킨 달성 시, 해당 판에 획득한 총 데미지가 <strong>2배로 적용됩니다.</strong> (역전의 발판)</li>
+                    </ul>
+                </li>
+                <li>⚡ <strong>크리티컬 히트:</strong> 타격 시 10% 확률로 데미지가 <strong>1.5배</strong> 증가하는 '크리티컬'이 터질 수 있습니다.</li>
+            </ul>
+
+            <h3>[🛡️ 금고 비상 쉴드 (돌발 미션)]</h3>
+            <ul>
+                <li>금고는 체력이 66%, 33%, 10% 이하로 떨어질 때마다 '비상 쉴드'를 가동합니다.</li>
+                <li>쉴드가 가동되면 더 이상 데미지를 넣을 수 없으며, 화면에 제시된 <strong>돌발 미션</strong>을 성공해야만 쉴드가 해제됩니다.</li>
+                <li>✅ <strong>미션 성공 시:</strong> 쉴드가 해제되며, 다음 타격 시 크리티컬(1.5배) 확률이 <strong>50%</strong>로 대폭 상승하는 버프를 받습니다.</li>
+                <li>❌ <strong>미션 실패 시:</strong> 쉴드는 강제로 해제되지만, 페널티로 금고의 체력이 <strong>5% 회복</strong>됩니다.</li>
+            </ul>
+
+            <h3>[승리 조건]</h3>
+            <ul>
+                <li>10% 최종 미션까지 무사히 돌파하고, 금고 체력을 완전히 0으로 만들면 파괴 성공과 함께 <strong>보상 룰렛이 가동됩니다!</strong></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="top-controls">
+    <div class="room-info">
+        <button class="btn-basic" onclick="alert('방 링크 복사 완료')">링크 복사</button>
+        <button class="btn-basic" onclick="document.body.classList.toggle('light-mode')">모드 전환</button>
+        <button class="btn-rule" onclick="document.getElementById('ruleModal').style.display='flex'">ℹ️ 룰 설명 보기</button>
+    </div>
+    <button class="btn-reset-custom" onclick="resetGame()">🧹 시트지 초기화</button>
+</div>
+
+<div class="header">
+    <h1>금고 털기</h1>
+</div>
+
+<div class="setup-area" id="setupArea">
+    <div class="setup-row">
+        <label>금고 체력: </label>
+        <input type="number" id="initHp" value="50000" step="1000">
+    </div>
+    <div class="setup-row" style="color:var(--pubg-yellow); font-weight:bold;">
+        <span>💰 금괴 보상 범위: </span>
+        <input type="number" id="minReward" value="500"> 개 ~ 
+        <input type="number" id="maxReward" value="1000"> 개
+    </div>
+    <button onclick="startGame()">레이드 시작</button>
+</div>
+
+<div class="main-container" id="mainContainer">
+    <div class="game-board">
+        <div class="hp-wrapper">
+            <div class="hp-text"><span id="currentHpText">50,000</span> / <span id="maxHpText">50,000</span></div>
+            <div class="hp-bar-bg"><div class="hp-bar-fill" id="hpBar"></div></div>
+        </div>
+
+        <div class="vault-display" id="vaultImg">
+            <!-- 동적 쉴드 UI -->
+            <div class="shield-overlay" id="shieldUI">
+                <h3>🛡️ 쉴드 가동</h3>
+                <p id="shieldDesc">미션 로딩 중...</p>
+                <div class="shield-btn-group" id="shieldBtnGroup">
+                    <button class="btn-success" onclick="resolveShield(true)" style="background:var(--pubg-green); color:white; border:2px solid #2e7d32; border-radius:6px;">미션 성공</button>
+                    <button class="btn-fail" onclick="resolveShield(false)" style="background:var(--pubg-red); color:white; border:2px solid #b71c1c; border-radius:6px;">실패 (5% 회복)</button>
+                </div>
+            </div>
+            
+            <div class="roulette-overlay" id="rouletteUI">
+                <div class="roulette-title">💰 보상 추첨 중...</div>
+                <div class="roulette-number" id="rouletteNumber">00000</div>
+            </div>
+        </div>
+
+        <div class="input-section" id="inputSectionWrapper">
+            <!-- 쉴드 안내 문구 -->
+            <div class="shield-notice">
+                <div class="main-txt">금고가 위험을 감지하고 쉴드를 발동했습니다.<br>미션을 클리어해서 쉴드를 제거하세요.</div>
+                <div class="sub-txt">(실패 시 체력의 5%가 회복됩니다.)</div>
+            </div>
+            
+            <div class="input-elements">
+                <div class="player-row">
+                    <div class="player-info">
+                        <input type="color" class="color-picker" value="#f2a900">
+                        <input type="text" class="name-input" value="Player 1" placeholder="이름">
+                    </div>
+                    <div class="score-inputs">
+                        <input type="number" class="input-box p-kill" placeholder="킬">
+                        <input type="number" class="input-box p-dmg" placeholder="딜량">
+                    </div>
+                </div>
+                <div class="player-row">
+                    <div class="player-info">
+                        <input type="color" class="color-picker" value="#388e3c">
+                        <input type="text" class="name-input" value="Player 2" placeholder="이름">
+                    </div>
+                    <div class="score-inputs">
+                        <input type="number" class="input-box p-kill" placeholder="킬">
+                        <input type="number" class="input-box p-dmg" placeholder="딜량">
+                    </div>
+                </div>
+                <div class="player-row">
+                    <div class="player-info">
+                        <input type="color" class="color-picker" value="#00d2ff">
+                        <input type="text" class="name-input" value="Player 3" placeholder="이름">
+                    </div>
+                    <div class="score-inputs">
+                        <input type="number" class="input-box p-kill" placeholder="킬">
+                        <input type="number" class="input-box p-dmg" placeholder="딜량">
+                    </div>
+                </div>
+                <div class="player-row">
+                    <div class="player-info">
+                        <input type="color" class="color-picker" value="#d32f2f">
+                        <input type="text" class="name-input" value="Player 4" placeholder="이름">
+                    </div>
+                    <div class="score-inputs">
+                        <input type="number" class="input-box p-kill" placeholder="킬">
+                        <input type="number" class="input-box p-dmg" placeholder="딜량">
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <label class="chicken-check" for="chkChicken">
+                        <input type="checkbox" id="chkChicken"> 🍗 치킨 달성 (데미지 2배)
+                    </label>
+                    <button class="btn-strike" id="btnStrike" onclick="strikeVault()">💥 타격하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="log-board">
+        <h3>ACTION LOG</h3>
+        <div class="log-content" id="logContent">
+            <div style="color:var(--border-color); text-align:center; margin-top:50%;">레이드가 시작되지 않았습니다.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let maxHp = 0;
+    let currentHp = 0;
+    let critBuff = false; 
+    let shieldPhase = 0; 
+    let currentMission = "";
+
+    const missionPools = {
+        1: ["투척무기 1킬", "팀 합산 5킬", "팀 합산 500딜", "차 없이 탑 20 생존", "SR 1킬"],
+        2: ["투척무기 3킬", "팀 합산 8킬", "팀 합산 1000딜", "차 없이 탑 10 생존", "판처파우스트 1킬"],
+        3: ["C4/근접투척 1킬", "팀 합산 11킬", "팀 합산 1500딜", "차 없이 탑 5 생존", "권총 1킬"]
+    };
+
+    function closeModal(e) {
+        if(e.target.id === 'ruleModal') {
+            document.getElementById('ruleModal').style.display = 'none';
+        }
+    }
+
+    function startGame() {
+        maxHp = parseInt(document.getElementById('initHp').value);
+        if(isNaN(maxHp) || maxHp <= 0) { alert("올바른 체력을 입력하세요."); return; }
+        
+        let minR = parseInt(document.getElementById('minReward').value);
+        let maxR = parseInt(document.getElementById('maxReward').value);
+        if(minR > maxR) { alert("보상 범위가 잘못되었습니다."); return; }
+        
+        currentHp = maxHp;
+        critBuff = false;
+        shieldPhase = 0;
+
+        document.getElementById('maxHpText').innerText = maxHp.toLocaleString();
+        document.getElementById('setupArea').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'flex'; 
+        document.getElementById('logContent').innerHTML = `
+            <details class="log-entry log-sys" open>
+                <summary><div class="log-title">[SYSTEM] 금고 레이드가 시작되었습니다.</div></summary>
+                <div class="log-detail-content">목표 체력: ${maxHp.toLocaleString()} HP</div>
+            </details>`;
+        
+        updateUI();
+    }
+
+    function resetGame() {
+        if(confirm("시트지를 완전히 초기화하시겠습니까?")) {
+            document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('setupArea').style.display = 'flex';
+            document.querySelectorAll('.input-box').forEach(el => el.value = '');
+            document.getElementById('chkChicken').checked = false;
+            document.getElementById('shieldUI').style.display = 'none';
+            document.getElementById('rouletteUI').style.display = 'none';
+            document.getElementById('inputSectionWrapper').classList.remove('shield-active');
+            document.getElementById('btnStrike').disabled = false;
+        }
+    }
+
+    function strikeVault() {
+        let totalK = 0;
+        let totalD = 0;
+        document.querySelectorAll('.p-kill').forEach(el => totalK += parseInt(el.value || 0));
+        document.querySelectorAll('.p-dmg').forEach(el => totalD += parseInt(el.value || 0));
+        const isChicken = document.getElementById('chkChicken').checked;
+
+        if(totalK === 0 && totalD === 0) { alert("입력된 값이 없습니다."); return; }
+
+        let killDmg = 0;
+        let killDetails = [];
+        for(let i=0; i<totalK; i++) {
+            let roll = Math.floor(Math.random() * 201) + 200; 
+            killDmg += roll;
+            killDetails.push(roll);
+        }
+        let baseTotal = killDmg + totalD;
+        let finalDmg = 0;
+        let logTitle = "";
+        let logClass = "log-normal";
+
+        if (isChicken) {
+            finalDmg = baseTotal * 2;
+            logTitle = `🍗 치킨 달성! (기본 ${baseTotal.toLocaleString()} x 2)`;
+            logClass = "log-chicken";
+            critBuff = false; 
+        } else {
+            let critChance = critBuff ? 0.5 : 0.1;
+            let isCrit = Math.random() < critChance;
+            if (isCrit) {
+                finalDmg = Math.floor(baseTotal * 1.5);
+                logTitle = `⚡ 크리티컬 히트! (기본 ${baseTotal.toLocaleString()} x 1.5)`;
+                if(critBuff) logTitle = `[버프적용] ` + logTitle;
+                logClass = "log-crit";
+            } else {
+                finalDmg = baseTotal;
+                logTitle = `💥 일반 타격`;
+            }
+            critBuff = false; 
+        }
+
+        currentHp -= finalDmg;
+        if(currentHp < 0) currentHp = 0;
+
+        let detailHtml = `
+            <div class="log-detail-content">
+                🔸 팀 합산 기록: ${totalK}킬 / ${totalD}딜<br>
+                🔸 킬 타격(${killDmg}점): [${killDetails.join(', ')}]<br>
+                🔸 딜량 타격: ${totalD}점
+            </div>`;
+        
+        let logStr = `
+            <details class="log-entry ${logClass}">
+                <summary>
+                    <div class="log-title">${logTitle}</div>
+                    <div class="log-dmg">➔ 💥 ${finalDmg.toLocaleString()} 타격</div>
+                </summary>
+                ${detailHtml}
+            </details>`;
+        addLog(logStr);
+
+        const vault = document.getElementById('vaultImg');
+        vault.classList.remove('shake');
+        void vault.offsetWidth; 
+        vault.classList.add('shake');
+
+        document.querySelectorAll('.input-box').forEach(el => el.value = '');
+        document.getElementById('chkChicken').checked = false;
+
+        updateUI();
+        setTimeout(() => checkState(), 600);
+    }
+
+    function checkState() {
+        let hpPercent = (currentHp / maxHp) * 100;
+        
+        if (currentHp <= 0 && shieldPhase < 3) {
+            triggerShield(3, 10);
+        } else if (hpPercent <= 66 && shieldPhase === 0) {
+            triggerShield(1, 66);
+        } else if (hpPercent <= 33 && shieldPhase === 1) {
+            triggerShield(2, 33);
+        } else if (hpPercent <= 10 && shieldPhase === 2) {
+            triggerShield(3, 10);
+        } else if (currentHp <= 0 && shieldPhase === 3) {
+            document.getElementById('btnStrike').disabled = true;
+            addLog(`
+            <details class="log-entry log-sys" open>
+                <summary><div class="log-title" style="font-size:18px;">🎉 금고 파괴 성공!! 레이드 종료!!</div></summary>
+            </details>`);
+            startRoulette();
+        }
+    }
+
+    function triggerShield(phaseNum, percent) {
+        shieldPhase = phaseNum;
+        const shieldUI = document.getElementById('shieldUI');
+        const desc = document.getElementById('shieldDesc');
+        const btns = document.getElementById('shieldBtnGroup');
+
+        shieldUI.className = 'shield-overlay';
+        shieldUI.classList.add(`shield-phase-${phaseNum}`);
+        shieldUI.style.display = 'flex';
+        document.getElementById('inputSectionWrapper').classList.add('shield-active');
+
+        btns.style.display = 'none'; 
+        desc.style.color = 'var(--text-main)';
+        desc.style.fontSize = '18px';
+        
+        let pool = missionPools[phaseNum];
+        let ticks = 0;
+        
+        let timer = setInterval(() => {
+            desc.innerText = pool[Math.floor(Math.random() * pool.length)];
+            ticks++;
+            if (ticks > 25) { 
+                clearInterval(timer);
+                currentMission = pool[Math.floor(Math.random() * pool.length)];
+                desc.innerText = `🎯 [선택된 미션] ${currentMission}`;
+                desc.style.color = '#fff';
+                desc.style.fontSize = '20px';
+                btns.style.display = 'block';
+
+                addLog(`
+                <details class="log-entry" open>
+                    <summary><span class="log-shield-warn">🚨 [경고] 금고 체력 ${percent}% 구간! 쉴드 가동!</span></summary>
+                    <div class="log-detail-content">미션: ${currentMission}</div>
+                </details>`);
+            }
+        }, 50);
+    }
+
+    function resolveShield(isSuccess) {
+        document.getElementById('shieldUI').style.display = 'none';
+        document.getElementById('inputSectionWrapper').classList.remove('shield-active');
+
+        if (isSuccess) {
+            critBuff = true;
+            addLog(`
+            <details class="log-entry">
+                <summary>
+                    <span class="log-shield-success">✅ [미션 성공] 방어막 해제!</span>
+                    <span class="log-shield-buff">➔ 다음 타격 크리티컬 확률 5배 (50%) 버프 적용!</span>
+                </summary>
+            </details>`);
+            
+            if(shieldPhase === 3 && currentHp <= 0) {
+                setTimeout(() => checkState(), 500);
+            }
+        } else {
+            let healAmount = Math.floor(maxHp * 0.05);
+            currentHp += healAmount;
+            if(currentHp > maxHp) currentHp = maxHp;
+            addLog(`
+            <details class="log-entry">
+                <summary>
+                    <span class="log-shield-fail">❌ [미션 실패] 방어막 해제 실패</span>
+                    <span class="log-shield-buff">➔ 페널티: 체력 5% (${healAmount.toLocaleString()}) 회복</span>
+                </summary>
+            </details>`);
+            updateUI();
+        }
+    }
+
+    function startRoulette() {
+        const rouletteUI = document.getElementById('rouletteUI');
+        const rouletteNum = document.getElementById('rouletteNumber');
+        rouletteUI.style.display = 'flex';
+        
+        let min = parseInt(document.getElementById('minReward').value);
+        let max = parseInt(document.getElementById('maxReward').value);
+        
+        let ticks = 0;
+        let timer = setInterval(() => {
+            rouletteNum.innerText = Math.floor(Math.random() * (max - min + 1) + min).toLocaleString();
+            ticks++;
+            if (ticks > 50) { 
+                clearInterval(timer);
+                let finalResult = Math.floor(Math.random() * (max - min + 1) + min);
+                rouletteNum.innerText = finalResult.toLocaleString() + " 개";
+                rouletteNum.style.color = "var(--pubg-yellow)";
+                rouletteNum.classList.add("shake");
+                
+                addLog(`
+                <details class="log-entry log-sys" open>
+                    <summary><div class="log-title" style="font-size:22px; margin-top:10px;">💰 최종 보상: ${finalResult.toLocaleString()}개 당첨!!</div></summary>
+                </details>`);
+            }
+        }, 50); 
+    }
+
+    function updateUI() {
+        document.getElementById('currentHpText').innerText = currentHp.toLocaleString();
+        
+        let percent = (currentHp / maxHp) * 100;
+        let bar = document.getElementById('hpBar');
+        bar.style.width = percent + '%';
+        
+        let r, g, b;
+        if (percent > 50) {
+            bar.style.backgroundColor = '#00bfff';
+        } else {
+            let ratio = percent / 50; 
+            r = Math.floor(139 + (116 * ratio)); 
+            g = Math.floor(69 * ratio); 
+            b = 0;
+            bar.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        }
+    }
+
+    function addLog(htmlStr) {
+        const logBox = document.getElementById('logContent');
+        logBox.innerHTML += htmlStr;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+</script>
+</body>
+</html>
