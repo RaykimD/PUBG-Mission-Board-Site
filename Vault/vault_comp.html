@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>금고 털기 - 상대팀과 대결하기</title>
+<style>
+    :root {
+        --bg-color: #1a1816;
+        --panel-bg: #26221f;
+        --border-color: #4a453f;
+        --text-main: #e0dcd3;
+        --title-color: #ffffff;
+        --input-bg: #111;
+        --pubg-yellow: #f2a900;
+        
+        /* 팀 컬러 변수화 */
+        --t1-color: #00a8ff; 
+        --t2-color: #e84118; 
+    }
+
+    body.light-mode {
+        --bg-color: #f5f5f5;
+        --panel-bg: #ffffff;
+        --border-color: #cccccc;
+        --text-main: #222222;
+        --title-color: #111111;
+        --input-bg: #f9f9f9;
+    }
+
+    body {
+        background-color: var(--bg-color); color: var(--text-main);
+        font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+        margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+
+    /* 상단 컨트롤 */
+    .top-controls { width: 1100px; max-width: 100%; display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
+    .room-info { display: flex; gap: 10px;}
+    .btn-basic { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight:bold;}
+    .btn-basic:hover { background: var(--border-color); }
+    .btn-rule { background: #005f99; color: white; border: 2px solid #008be0; padding: 6px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+    .btn-rule:hover { background: #008be0; }
+    .btn-reset-custom { background-color: #d32f2f; color: white; border: 3px solid #666; padding: 8px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+    .header { text-align: center; margin-bottom: 20px; }
+    .header h1 { margin: 0; font-size: 40px; font-weight: 900; color: var(--title-color); letter-spacing: 2px; }
+    .header .sub-title { color: var(--pubg-yellow); font-size: 18px; font-weight: bold; margin-top: 5px; }
+
+    /* 룰 설명 모달 (팝업) UI */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000;
+        backdrop-filter: blur(3px);
+    }
+    .modal-content {
+        background: var(--panel-bg); border: 2px solid var(--pubg-yellow); border-radius: 12px;
+        width: 600px; max-width: 90%; max-height: 80vh; display: flex; flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8); overflow: hidden;
+    }
+    .modal-header { background: #111; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); }
+    .modal-header h2 { margin: 0; font-size: 20px; color: var(--pubg-yellow); }
+    .close-btn { background: transparent; border: none; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; line-height: 1;}
+    .close-btn:hover { color: #fff; }
+    .modal-body { padding: 20px 30px; overflow-y: auto; font-size: 15px; line-height: 1.6; color: var(--text-main); }
+    .modal-body h3 { color: #fff; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px;}
+    .modal-body h3:first-child { margin-top: 0; }
+    .modal-body ul { padding-left: 20px; margin: 0; }
+    .modal-body li { margin-bottom: 8px; }
+
+    /* 전역 승리 오버레이 (게임 종료 화면) */
+    .global-win-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9); display: none; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 9999;
+        backdrop-filter: blur(8px);
+    }
+    .global-win-overlay h2 {
+        font-size: 70px; font-weight: 900; margin-bottom: 10px;
+        text-shadow: 0 0 40px rgba(255,255,255,0.3); text-align: center;
+        animation: scale-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+    .global-win-overlay p {
+        font-size: 24px; color: #e0e0e0; font-weight: bold; margin-bottom: 40px;
+        animation: fade-in 1s ease-out 0.5s both;
+    }
+    .btn-restart-game {
+        padding: 15px 40px; font-size: 20px; font-weight: bold;
+        background: var(--pubg-red); color: white; border: 3px solid #b71c1c;
+        border-radius: 8px; cursor: pointer; transition: 0.2s;
+        animation: fade-in 1s ease-out 1s both;
+    }
+    .btn-restart-game:hover { background: #b71c1c; transform: scale(1.05); }
+
+    @keyframes scale-up { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes fade-in { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+
+    /* Setup Area */
+    .setup-area { background: var(--panel-bg); padding: 20px 40px; border: 2px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .setup-area input { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; width: 120px; font-size: 18px; text-align: center; font-weight: bold; }
+    .setup-area button { background: var(--pubg-yellow); color: #000; font-weight: bold; padding: 10px 30px; cursor: pointer; border: none; border-radius: 4px; font-size: 18px; margin-top: 10px; }
+
+    /* Main Container */
+    .main-container { display: none; width: 1100px; max-width: 100%; display: flex; gap: 20px; align-items: stretch; height: 780px; }
+    
+    /* Left: Game Board */
+    .game-board { flex: 1.5; background: var(--panel-bg); border: 2px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; }
+
+    /* --- 대결 구도 (VS) 영역 --- */
+    .versus-arena { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px dashed var(--border-color); }
+    .team-vault-container { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+    
+    .vs-badge { font-size: 32px; font-weight: 900; color: #555; font-style: italic; text-shadow: 2px 2px 0px #000; }
+
+    .team-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .team-color-picker { width: 28px; height: 28px; padding: 0; border: none; cursor: pointer; border-radius: 4px; background: transparent; }
+    .team-name-input { background: transparent; border: none; text-align: center; font-size: 22px; font-weight: bold; width: 140px; text-shadow: 1px 1px 4px #000; transition: color 0.3s; }
+    .team-name-input:focus { outline: none; border-bottom: 1px dashed var(--border-color); }
+    .t1-name { color: var(--t1-color); }
+    .t2-name { color: var(--t2-color); }
+
+    .hp-text { font-size: 22px; font-weight: bold; font-family: monospace; margin-bottom: 5px; }
+    .hp-bar-bg { width: 100%; height: 20px; background: #111; border: 2px solid #000; border-radius: 10px; overflow: hidden; margin-bottom: 15px;}
+    .hp-bar-fill { height: 100%; transition: width 0.5s ease-out, background-color 0.3s; }
+    #hpBar1 { background: var(--t1-color); }
+    #hpBar2 { background: var(--t2-color); }
+
+    .vault-display {
+        width: 100%; max-width: 220px; height: 220px; border: 4px solid #111; border-radius: 10px; position: relative;
+        background-image: url('금고.jpg'); background-size: cover; background-position: center; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box;
+    }
+
+    .shield-overlay { 
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; 
+        backdrop-filter: blur(2px); z-index: 10; box-sizing: border-box; border-radius: inherit; 
+    }
+    .shield-overlay h3 { color: #fff; margin: 0 0 5px 0; font-size: 18px; }
+    .shield-overlay p { color: #fff; font-size: 13px; font-weight: bold; margin: 0; word-break: keep-all; padding: 0 5px;}
+    
+    .shield-phase-1 { border: 4px solid #00d2ff; animation: pulse-blue 1.5s infinite alternate ease-in-out; }
+    .shield-phase-2 { border: 5px solid #ff9800; animation: pulse-orange 1s infinite alternate ease-in-out; }
+    .shield-phase-3 { border: 6px solid #ff0000; animation: pulse-red 0.6s infinite alternate ease-in-out; }
+    
+    @keyframes pulse-blue { 0% { background: rgba(0, 150, 255, 0.1); box-shadow: inset 0 0 10px rgba(0, 150, 255, 0.2); } 100% { background: rgba(0, 150, 255, 0.4); box-shadow: inset 0 0 30px rgba(0, 150, 255, 0.8); } }
+    @keyframes pulse-orange { 0% { background: rgba(255, 152, 0, 0.15); box-shadow: inset 0 0 15px rgba(255, 152, 0, 0.3); } 100% { background: rgba(255, 152, 0, 0.5); box-shadow: inset 0 0 40px rgba(255, 152, 0, 0.9); } }
+    @keyframes pulse-red { 0% { background: rgba(255, 0, 0, 0.2); box-shadow: inset 0 0 20px rgba(255,0,0,0.5); } 100% { background: rgba(255, 0, 0, 0.6); box-shadow: inset 0 0 60px rgba(255,0,0,1); } }
+
+    .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
+
+    .win-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 20; color: var(--pubg-yellow); font-size: 28px; font-weight: 900; text-shadow: 0 0 20px rgba(242,169,0,0.8); }
+
+    /* --- 하단 입력(탭) 영역 --- */
+    .input-section { flex-grow: 1; display: flex; flex-direction: column; position: relative;}
+    .tab-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+    .tab-btn { flex: 1; padding: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; border-radius: 8px 8px 0 0; background: #111; color: #666; transition: 0.2s; }
+    .tab-btn.t1-active { background: rgba(255, 255, 255, 0.05); color: var(--t1-color); border-bottom: 3px solid var(--t1-color); }
+    .tab-btn.t2-active { background: rgba(255, 255, 255, 0.05); color: var(--t2-color); border-bottom: 3px solid var(--t2-color); }
+
+    .tab-content { display: none; flex-direction: column; gap: 10px; }
+    .tab-content.active { display: flex; }
+    .tab-content.shield-active { filter: blur(4px); pointer-events: none; opacity: 0.5; }
+    
+    .shield-solve-area { 
+        display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        background: #111; padding: 25px 30px; border-radius: 12px; border: 3px solid #fff; 
+        text-align: center; z-index: 5; width: 85%; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+    }
+    .shield-solve-area h3 { color: #fff; margin-top: 0; margin-bottom: 25px; font-size: 22px;}
+    
+    .btn-group-shield { display: flex; justify-content: center; gap: 15px; }
+    .btn-success { background-color: var(--pubg-green); color: white; padding: 12px 24px; font-weight: bold; font-size: 16px; border: 2px solid #2e7d32; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.5); transition: 0.1s; }
+    .btn-success:hover { background-color: #2e7d32; transform: translateY(-2px); }
+    .btn-fail { background-color: var(--pubg-red); color: white; padding: 12px 24px; font-weight: bold; font-size: 16px; border: 2px solid #b71c1c; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.5); transition: 0.1s; }
+    .btn-fail:hover { background-color: #b71c1c; transform: translateY(-2px); }
+
+    .player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px;}
+    .p-name-input { background: transparent; border: none; color: var(--text-main); font-weight: bold; font-size: 15px; width: 100px; border-bottom: 1px dashed var(--border-color);}
+    .p-name-input:focus { outline: none; border-bottom: 1px solid var(--pubg-yellow);}
+    .score-inputs { display: flex; gap: 5px; }
+    .input-box { width: 60px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; text-align: center; font-size: 15px; font-weight: bold; }
+
+    .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 15px;}
+    .chicken-check { font-size: 16px; color: var(--pubg-yellow); font-weight: bold; cursor: pointer; }
+    .btn-strike { color: #fff; font-size: 18px; font-weight: bold; padding: 12px 40px; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+    #btnStrike1 { background: var(--t1-color); filter: brightness(0.8);} #btnStrike1:hover { filter: brightness(1.1); }
+    #btnStrike2 { background: var(--t2-color); filter: brightness(0.8);} #btnStrike2:hover { filter: brightness(1.1); }
+
+    /* Right: Action Log */
+    .log-board { flex: 1; background: var(--panel-bg); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; }
+    .log-board h3 { margin: 0 0 15px 0; color: var(--text-main); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; font-weight: 900;}
+    .log-content { flex: 1; overflow-y: auto; font-size: 14px; padding-right: 5px; display: flex; flex-direction: column; gap: 8px; }
+    
+    details.log-entry { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; flex-shrink: 0;}
+    details.log-entry summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 5px; outline: none; }
+    details.log-entry summary::-webkit-details-marker { display: none; }
+    
+    .log-title { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 5px; }
+    .log-t1 { color: var(--t1-color); }
+    .log-t2 { color: var(--t2-color); }
+    .log-dmg { font-size: 14px; color: var(--text-main); margin-left: 5px; opacity: 0.9;}
+    .log-detail-content { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); font-size: 13px; color: #999; line-height: 1.6;}
+
+    .log-sys .log-title { color: var(--pubg-yellow); }
+    .log-normal .log-title { color: var(--text-main); }
+    .log-crit .log-title { color: #ff9800; }
+    .log-chicken .log-title { color: var(--pubg-yellow); font-size: 16px; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- 게임 종료 전역 오버레이 -->
+<div class="global-win-overlay" id="globalWinOverlay">
+    <h2 id="globalWinText">WINNER TEAM 승리!!</h2>
+    <p>모든 금고의 잠금이 해제되었습니다. 레이드가 종료됩니다.</p>
+    <button class="btn-restart-game" onclick="location.reload()">새로운 대결 시작</button>
+</div>
+
+<!-- 룰 설명 모달 -->
+<div class="modal-overlay" id="ruleModal" onclick="closeModal(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📝 금고 털기 (Vault Heist) 룰 가이드</h2>
+            <button class="close-btn" onclick="document.getElementById('ruleModal').style.display='none'">×</button>
+        </div>
+        <div class="modal-body">
+            <h3>[기본 규칙]</h3>
+            <ul>
+                <li><strong>목표:</strong> 배그 인게임에서 기록한 '킬'과 '딜량'을 포인트로 환산하여, 금고의 체력을 <strong>0</strong>으로 만들어 파괴하는 것이 목표입니다.</li>
+                <li><strong>데미지 환산 방식:</strong>
+                    <ul>
+                        <li>🗡️ <strong>딜량:</strong> 1딜 = 1점 데미지 (정직한 딜링)</li>
+                        <li>🔫 <strong>킬:</strong> 1킬 = 200~400점 사이의 '랜덤 데미지' (킬을 많이 할수록 도파민 폭발!)</li>
+                        <li>🍗 <strong>치킨:</strong> 치킨 달성 시, 해당 판에 획득한 총 데미지가 <strong>2배로 적용됩니다.</strong> (역전의 발판)</li>
+                    </ul>
+                </li>
+                <li>⚡ <strong>크리티컬 히트:</strong> 타격 시 10% 확률로 데미지가 <strong>1.5배</strong> 증가하는 '크리티컬'이 터질 수 있습니다.</li>
+            </ul>
+
+            <h3>[🛡️ 금고 비상 쉴드 (돌발 미션)]</h3>
+            <ul>
+                <li>금고는 체력이 66%, 33%, 10% 이하로 떨어질 때마다 '비상 쉴드'를 가동합니다.</li>
+                <li>쉴드가 가동되면 더 이상 데미지를 넣을 수 없으며, 화면에 제시된 <strong>돌발 미션</strong>을 성공해야만 쉴드가 해제됩니다.</li>
+                <li>✅ <strong>미션 성공 시:</strong> 쉴드가 해제되며, 다음 타격 시 크리티컬(1.5배) 확률이 <strong>50%</strong>로 대폭 상승하는 버프를 받습니다.</li>
+                <li>❌ <strong>미션 실패 시:</strong> 쉴드는 강제로 해제되지만, 페널티로 금고의 체력이 <strong>5% 회복</strong>됩니다.</li>
+            </ul>
+
+            <h3>[승리 조건]</h3>
+            <ul>
+                <li>상대 팀보다 먼저 10% 최종 미션까지 돌파하고, 금고 체력을 0으로 만드는 팀이 <strong>최종 승리</strong>합니다!</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="top-controls">
+    <div class="room-info">
+        <button class="btn-basic" onclick="alert('방 링크 복사 완료')">링크 복사</button>
+        <button class="btn-basic" onclick="document.body.classList.toggle('light-mode')">모드 전환</button>
+        <button class="btn-rule" onclick="document.getElementById('ruleModal').style.display='flex'">ℹ️ 룰 설명 보기</button>
+    </div>
+    <button class="btn-reset-custom" onclick="location.reload()">🧹 시트지 초기화</button>
+</div>
+
+<div class="header">
+    <h1>금고 털기 <span style="color:#888;">|</span> 대결 모드</h1>
+    <div class="sub-title">먼저 금고를 파괴하는 팀이 모든 것을 가져간다!</div>
+</div>
+
+<div class="setup-area" id="setupArea">
+    <div style="font-size: 18px; font-weight: bold;">양 팀 공통 금고 체력</div>
+    <input type="number" id="initHp" value="50000" step="1000">
+    <button onclick="startGame()">⚔️ 대결 시작</button>
+</div>
+
+<div class="main-container" id="mainContainer">
+    <!-- 왼쪽 보드 -->
+    <div class="game-board">
+        <!-- 상단: 전장 상황판 -->
+        <div class="versus-arena">
+            <!-- Team 1 Vault -->
+            <div class="team-vault-container">
+                <div class="team-header">
+                    <input type="color" class="team-color-picker" value="#00a8ff" onchange="updateTeamColor(1, this.value)">
+                    <input type="text" class="team-name-input t1-name" id="t1Name" value="TEAM 1" oninput="syncTeamNames()">
+                </div>
+                <div class="hp-text"><span id="hpText1">50,000</span></div>
+                <div class="hp-bar-bg"><div class="hp-bar-fill" id="hpBar1"></div></div>
+                <div class="vault-display" id="vaultImg1">
+                    <div class="shield-overlay" id="shieldUI1">
+                        <h3>🛡️ 쉴드 가동</h3><p id="shieldDesc1">미션 로딩 중...</p>
+                    </div>
+                    <div class="win-overlay" id="win1">WINNER!</div>
+                </div>
+            </div>
+
+            <div class="vs-badge">VS</div>
+
+            <!-- Team 2 Vault -->
+            <div class="team-vault-container">
+                <div class="team-header">
+                    <input type="color" class="team-color-picker" value="#e84118" onchange="updateTeamColor(2, this.value)">
+                    <input type="text" class="team-name-input t2-name" id="t2Name" value="TEAM 2" oninput="syncTeamNames()">
+                </div>
+                <div class="hp-text"><span id="hpText2">50,000</span></div>
+                <div class="hp-bar-bg"><div class="hp-bar-fill" id="hpBar2"></div></div>
+                <div class="vault-display" id="vaultImg2">
+                    <div class="shield-overlay" id="shieldUI2">
+                        <h3>🛡️ 쉴드 가동</h3><p id="shieldDesc2">미션 로딩 중...</p>
+                    </div>
+                    <div class="win-overlay" id="win2">WINNER!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단: 탭 입력창 -->
+        <div class="input-section">
+            <div class="tab-buttons">
+                <button class="tab-btn t1-active" id="btnTab1" onclick="switchTab(1)">🟦 TEAM 1 입력</button>
+                <button class="tab-btn" id="btnTab2" onclick="switchTab(2)">🟥 TEAM 2 입력</button>
+            </div>
+
+            <!-- 쉴드 미션 해결 팝업 -->
+            <div class="shield-solve-area" id="solveArea">
+                <h3 id="solveTitle">TEAM 1 미션 진행 중</h3>
+                <div class="btn-group-shield">
+                    <button class="btn-success" onclick="resolveShield(true)">미션 성공</button>
+                    <button class="btn-fail" onclick="resolveShield(false)">실패 (5% 회복)</button>
+                </div>
+            </div>
+
+            <!-- Team 1 입력 폼 -->
+            <div class="tab-content active" id="tab1">
+                <script>
+                    for(let i=1; i<=4; i++) {
+                        document.write(`
+                        <div class="player-row">
+                            <input type="text" class="p-name-input" value="Player ${i}">
+                            <div class="score-inputs">
+                                <input type="number" class="input-box t1-k" placeholder="킬">
+                                <input type="number" class="input-box t1-d" placeholder="딜량">
+                            </div>
+                        </div>`);
+                    }
+                </script>
+                <div class="action-row">
+                    <label class="chicken-check"><input type="checkbox" id="chkChicken1"> 🍗 치킨 달성 (데미지 2배)</label>
+                    <button class="btn-strike" id="btnStrike1" onclick="strikeVault(1)">💥 타격하기</button>
+                </div>
+            </div>
+
+            <!-- Team 2 입력 폼 -->
+            <div class="tab-content" id="tab2">
+                <script>
+                    for(let i=1; i<=4; i++) {
+                        document.write(`
+                        <div class="player-row">
+                            <input type="text" class="p-name-input" value="Player ${i}">
+                            <div class="score-inputs">
+                                <input type="number" class="input-box t2-k" placeholder="킬">
+                                <input type="number" class="input-box t2-d" placeholder="딜량">
+                            </div>
+                        </div>`);
+                    }
+                </script>
+                <div class="action-row">
+                    <label class="chicken-check"><input type="checkbox" id="chkChicken2"> 🍗 치킨 달성 (데미지 2배)</label>
+                    <button class="btn-strike" id="btnStrike2" onclick="strikeVault(2)">💥 타격하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 오른쪽 로그 -->
+    <div class="log-board">
+        <h3>ACTION LOG</h3>
+        <div class="log-content" id="logContent"></div>
+    </div>
+</div>
+
+<script>
+    let maxHp = 0;
+    let teams = {
+        1: { hp: 0, phase: 0, buff: false, activeShield: false, mission: "" },
+        2: { hp: 0, phase: 0, buff: false, activeShield: false, mission: "" }
+    };
+    let currentTab = 1;
+    let isGameOver = false;
+
+    const missionPools = {
+        1: ["투척무기 1킬", "팀 합산 5킬", "팀 합산 500딜", "차 없이 탑 20 생존", "SR 1킬"],
+        2: ["투척무기 3킬", "팀 합산 8킬", "팀 합산 1000딜", "차 없이 탑 10 생존", "판처파우스트 1킬"],
+        3: ["C4/근접투척 1킬", "팀 합산 11킬", "팀 합산 1500딜", "차 없이 탑 5 생존", "권총 1킬"]
+    };
+
+    function closeModal(e) {
+        if(e.target.id === 'ruleModal') { document.getElementById('ruleModal').style.display = 'none'; }
+    }
+
+    function updateTeamColor(teamId, colorHex) { document.documentElement.style.setProperty(`--t${teamId}-color`, colorHex); }
+
+    function syncTeamNames() {
+        let t1 = document.getElementById('t1Name').value || "TEAM 1";
+        let t2 = document.getElementById('t2Name').value || "TEAM 2";
+        
+        document.getElementById('btnTab1').innerHTML = `🟦 ${t1} 입력`;
+        document.getElementById('btnTab2').innerHTML = `🟥 ${t2} 입력`;
+        
+        if(teams[currentTab].activeShield) {
+            let activeName = currentTab === 1 ? t1 : t2;
+            document.getElementById('solveTitle').innerText = `${activeName} 쉴드 미션 진행 중!`;
+        }
+    }
+
+    function startGame() {
+        maxHp = parseInt(document.getElementById('initHp').value);
+        if(isNaN(maxHp) || maxHp <= 0) return alert("올바른 체력을 입력하세요.");
+        
+        teams[1].hp = maxHp; teams[2].hp = maxHp;
+        document.getElementById('setupArea').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'flex'; 
+        
+        updateUI(1); updateUI(2);
+        addLog(`
+            <details class="log-entry log-sys" open>
+                <summary><div class="log-title" style="font-size:18px;">⚔️ 4 VS 4 대결 레이드가 시작되었습니다!</div></summary>
+                <div class="log-detail-content">목표 체력: ${maxHp.toLocaleString()} HP</div>
+            </details>
+        `);
+        switchTab(1);
+        syncTeamNames();
+    }
+
+    function switchTab(teamId) {
+        currentTab = teamId;
+        document.getElementById('btnTab1').className = `tab-btn ${teamId===1 ? 't1-active' : ''}`;
+        document.getElementById('btnTab2').className = `tab-btn ${teamId===2 ? 't2-active' : ''}`;
+        
+        document.getElementById('tab1').style.display = teamId===1 ? 'flex' : 'none';
+        document.getElementById('tab2').style.display = teamId===2 ? 'flex' : 'none';
+        
+        checkShieldUI(teamId);
+    }
+
+    function checkShieldUI(teamId) {
+        const solveArea = document.getElementById('solveArea');
+        const tab = document.getElementById(`tab${teamId}`);
+        
+        if (teams[teamId].activeShield && !isGameOver) {
+            tab.classList.add('shield-active');
+            solveArea.style.display = 'block';
+            let tName = document.getElementById(`t${teamId}Name`).value || `TEAM ${teamId}`;
+            document.getElementById('solveTitle').innerText = `${tName} 쉴드 미션 진행 중!`;
+            document.getElementById('solveTitle').style.color = `var(--t${teamId}-color)`;
+        } else {
+            tab.classList.remove('shield-active');
+            solveArea.style.display = 'none';
+        }
+    }
+
+    function strikeVault(teamId) {
+        if(isGameOver) return;
+        let totalK = 0, totalD = 0;
+        document.querySelectorAll(`.t${teamId}-k`).forEach(el => totalK += parseInt(el.value || 0));
+        document.querySelectorAll(`.t${teamId}-d`).forEach(el => totalD += parseInt(el.value || 0));
+        let isChicken = document.getElementById(`chkChicken${teamId}`).checked;
+
+        if(totalK === 0 && totalD === 0) return alert("값을 입력하세요.");
+
+        let killDmg = 0;
+        let killDetails = [];
+        for(let i=0; i<totalK; i++) {
+            let roll = Math.floor(Math.random() * 201) + 200; 
+            killDmg += roll;
+            killDetails.push(roll);
+        }
+        
+        let baseTotal = killDmg + totalD;
+        let finalDmg = 0;
+        let logTxt = "";
+        let logClass = "log-normal";
+
+        if (isChicken) {
+            finalDmg = baseTotal * 2; 
+            logTxt = `🍗 치킨 달성! (x2)`; 
+            logClass = "log-chicken";
+            teams[teamId].buff = false;
+        } else {
+            let isCrit = Math.random() < (teams[teamId].buff ? 0.5 : 0.1);
+            if (isCrit) {
+                finalDmg = Math.floor(baseTotal * 1.5); 
+                logTxt = `⚡ 크리티컬 히트! (x1.5)`;
+                logClass = "log-crit";
+                if(teams[teamId].buff) logTxt = `[버프적용] ` + logTxt;
+            } else {
+                finalDmg = baseTotal; 
+                logTxt = `💥 일반 타격`;
+            }
+            teams[teamId].buff = false; 
+        }
+
+        teams[teamId].hp -= finalDmg;
+        if(teams[teamId].hp < 0) teams[teamId].hp = 0;
+
+        let curName = document.getElementById(`t${teamId}Name`).value || `TEAM ${teamId}`;
+        let tNameHtml = `<span class="log-t${teamId}">[${curName}]</span>`;
+
+        let detailHtml = `
+            <div class="log-detail-content">
+                🔸 합산 기록: ${totalK}킬 / ${totalD}딜<br>
+                🔸 킬 타격(${killDmg}점): [${killDetails.join(', ')}]<br>
+                🔸 딜량 타격: ${totalD}점
+            </div>`;
+
+        addLog(`
+            <details class="log-entry ${logClass}">
+                <summary>
+                    <div class="log-title">${tNameHtml} ${logTxt}</div>
+                    <div class="log-dmg">➔ 💥 ${finalDmg.toLocaleString()} 타격</div>
+                </summary>
+                ${detailHtml}
+            </details>
+        `);
+
+        const vault = document.getElementById(`vaultImg${teamId}`);
+        vault.classList.remove('shake'); void vault.offsetWidth; vault.classList.add('shake');
+
+        document.querySelectorAll(`.t${teamId}-k, .t${teamId}-d`).forEach(el => el.value = '');
+        document.getElementById(`chkChicken${teamId}`).checked = false;
+
+        updateUI(teamId);
+        setTimeout(() => processPhase(teamId), 500);
+    }
+
+    function processPhase(teamId) {
+        if(isGameOver) return;
+        let t = teams[teamId];
+        let pct = (t.hp / maxHp) * 100;
+
+        if (t.hp <= 0 && t.phase < 3) {
+            triggerShield(teamId, 3, 10);
+        } else if (pct <= 66 && t.phase === 0) {
+            triggerShield(teamId, 1, 66);
+        } else if (pct <= 33 && t.phase === 1) {
+            triggerShield(teamId, 2, 33);
+        } else if (pct <= 10 && t.phase === 2) {
+            triggerShield(teamId, 3, 10);
+        } else if (t.hp <= 0 && t.phase === 3) {
+            isGameOver = true;
+            document.getElementById(`win${teamId}`).style.display = 'flex';
+            let curName = document.getElementById(`t${teamId}Name`).value || `TEAM ${teamId}`;
+            addLog(`
+            <details class="log-entry log-sys" open>
+                <summary><div class="log-title" style="font-size:18px;">🏆 ${curName} 최종 승리!! 금고 파괴 성공!!</div></summary>
+            </details>`);
+            
+            // 전역 승리 화면 표시 (딜레이 연출)
+            setTimeout(() => {
+                document.getElementById('globalWinText').innerText = `🏆 ${curName} 승리!!`;
+                document.getElementById('globalWinText').style.color = `var(--t${teamId}-color)`;
+                document.getElementById('globalWinOverlay').style.display = 'flex';
+            }, 1000);
+        }
+    }
+
+    function triggerShield(teamId, phase, pct) {
+        let t = teams[teamId];
+        t.phase = phase;
+        t.activeShield = true;
+        
+        let pool = missionPools[phase];
+        t.mission = pool[Math.floor(Math.random() * pool.length)];
+
+        const ui = document.getElementById(`shieldUI${teamId}`);
+        ui.className = 'shield-overlay';
+        ui.classList.add(`shield-phase-${phase}`);
+        ui.style.display = 'flex';
+        document.getElementById(`shieldDesc${teamId}`).innerText = `🎯 [미션] ${t.mission}`;
+
+        let curName = document.getElementById(`t${teamId}Name`).value || `TEAM ${teamId}`;
+        let tNameHtml = `<span class="log-t${teamId}">[${curName}]</span>`;
+        
+        addLog(`
+        <details class="log-entry" open>
+            <summary><div class="log-title" style="color:#00d2ff;">🚨 ${tNameHtml} ${pct}% 구간 쉴드 가동!</div></summary>
+            <div class="log-detail-content">발생 미션: ${t.mission}</div>
+        </details>`);
+        
+        if(currentTab === teamId) checkShieldUI(teamId);
+    }
+
+    function resolveShield(isSuccess) {
+        let teamId = currentTab;
+        let t = teams[teamId];
+        t.activeShield = false;
+        
+        document.getElementById(`shieldUI${teamId}`).style.display = 'none';
+        checkShieldUI(teamId);
+
+        let curName = document.getElementById(`t${teamId}Name`).value || `TEAM ${teamId}`;
+        let tNameHtml = `<span class="log-t${teamId}">[${curName}]</span>`;
+
+        if(isSuccess) {
+            t.buff = true;
+            addLog(`
+            <details class="log-entry">
+                <summary><div class="log-title" style="color:var(--pubg-green);">✅ ${tNameHtml} 미션 성공! (다음 타격 50% 크리 버프)</div></summary>
+            </details>`);
+            if(t.phase === 3 && t.hp <= 0) setTimeout(() => processPhase(teamId), 300);
+        } else {
+            let heal = Math.floor(maxHp * 0.05);
+            t.hp += heal; if(t.hp > maxHp) t.hp = maxHp;
+            addLog(`
+            <details class="log-entry">
+                <summary><div class="log-title" style="color:var(--pubg-red);">❌ ${tNameHtml} 미션 실패</div></summary>
+                <div class="log-detail-content">페널티: 체력 5% (${heal.toLocaleString()}) 회복</div>
+            </details>`);
+            updateUI(teamId);
+        }
+    }
+
+    function updateUI(teamId) {
+        let t = teams[teamId];
+        document.getElementById(`hpText${teamId}`).innerText = t.hp.toLocaleString();
+        let pct = (t.hp / maxHp) * 100;
+        document.getElementById(`hpBar${teamId}`).style.width = pct + '%';
+    }
+
+    function addLog(html) {
+        const logBox = document.getElementById('logContent');
+        logBox.innerHTML += html;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
