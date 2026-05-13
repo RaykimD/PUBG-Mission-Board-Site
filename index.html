@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>배그 미션 시트지 사이트</title>
     <style>
-        :root { --bg: #f8f9fa; --card-bg: #ffffff; --text: #212529; --primary: #4d94ff; --border-color: #eee; }
-        [data-theme='dark'] { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --primary: #3498db; --border-color: #333; }
+        :root { --bg: #f8f9fa; --card-bg: #ffffff; --text: #212529; --primary: #4d94ff; --border-color: #eee; --input-bg: #f1f3f5; }
+        [data-theme='dark'] { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --primary: #3498db; --border-color: #333; --input-bg: #2a2a2a; }
 
         body { background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', sans-serif; margin: 0; transition: 0.3s; }
         
@@ -43,7 +43,7 @@
         .mission-card.locked { opacity: 0.4; cursor: default; filter: grayscale(1); transform: none; box-shadow: none; border-color: var(--border-color); }
 
         .icon { font-size: 3rem; margin-bottom: 12px; display: block; }
-        .m-title { font-size: 1.4rem; font-weight: 800; }
+        .m-title { font-size: 1.4rem; font-weight: 800; display: block;}
         .m-desc { font-size: 0.85rem; opacity: 0.6; margin-top: 8px; line-height: 1.4; display: block; }
 
         /* --- 이벤트 배너 가로형 레이아웃 --- */
@@ -58,7 +58,7 @@
         .event-img {
             width: 80px;
             height: 80px;
-            border-radius: 50%; /* 움짤을 동그랗게 */
+            border-radius: 50%; /* 이미지를 동그랗게 */
             object-fit: cover;
             flex-shrink: 0;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -72,16 +72,67 @@
         .event-text .m-title { margin-bottom: 5px; }
         .event-text .m-desc { margin-top: 0; }
 
+        /* 모달 (금고 털기 모드 선택 창) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: var(--card-bg); border: 2px solid var(--primary); border-radius: 12px;
+            width: 550px; max-width: 90%; display: flex; flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); overflow: hidden;
+        }
+        .modal-header {
+            padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header h2 { margin: 0; font-size: 20px; color: var(--text); }
+        .close-btn { background: transparent; border: none; color: var(--text); font-size: 28px; cursor: pointer; font-weight: bold; line-height: 1; opacity: 0.5;}
+        .close-btn:hover { opacity: 1; }
+        .modal-body { padding: 30px 25px; display: flex; gap: 20px; }
+        
+        .mode-card {
+            flex: 1; background: var(--input-bg); border: 2px solid var(--border-color);
+            border-radius: 10px; padding: 25px 15px; text-align: center; cursor: pointer; transition: 0.2s;
+        }
+        .mode-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .mode-card h3 { margin: 15px 0 10px 0; font-size: 1.2rem; color: var(--text); }
+        .mode-card p { margin: 0; font-size: 0.9rem; opacity: 0.7; color: var(--text); word-break: keep-all; line-height: 1.4;}
+
         footer { margin-top: 60px; padding: 30px 0; opacity: 0.4; border-top: 1px solid var(--border-color); font-size: 0.8rem; text-align: center; font-weight: bold; }
 
         @media (max-width: 900px) {
             .wrapper { flex-direction: column; }
             .sidebar { width: auto; border-right: none; border-bottom: 1px solid var(--border-color); position: static; }
             .mission-grid { grid-template-columns: 1fr !important; }
+            .modal-body { flex-direction: column; }
         }
     </style>
 </head>
 <body>
+    <!-- 금고 털기 모드 선택 모달 -->
+    <div class="modal-overlay" id="vaultModal" onclick="closeVaultModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏦 수백이의 금고 털기 - 모드 선택</h2>
+                <button class="close-btn" onclick="document.getElementById('vaultModal').style.display='none'">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="mode-card" onclick="createVaultRoom('coop')">
+                    <div style="font-size: 3.5rem;">🤝</div>
+                    <h3>한 팀으로 플레이</h3>
+                    <p>스트리머 4인이 협동하여 하나의 거대한 금고를 털어보세요!</p>
+                </div>
+                <div class="mode-card" onclick="createVaultRoom('comp')">
+                    <div style="font-size: 3.5rem;">⚔️</div>
+                    <h3>상대팀과 대결하기</h3>
+                    <p>4:4로 팀을 나누어 누가 먼저 금고를 파괴하는지 경쟁하세요!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="wrapper">
         <aside class="sidebar">
             <h2>💡 사용 방법</h2>
@@ -129,10 +180,16 @@
                     <span class="m-title">땅따먹기</span>
                     <span class="m-desc">최대 4개 팀의 치열한 점령전</span>
                 </a>
-                <a href="#" onclick="confirmCreateRoom('gacha.html', '가챠배그')" class="mission-card">
+                <a href="#" onclick="confirmCreateRoom('gacha.html', 'GACHA SHOP')" class="mission-card">
                     <span class="icon">🎁</span>
-                    <span class="m-title">가챠배그</span>
+                    <span class="m-title">GACHA SHOP</span>
                     <span class="m-desc">배그로 가챠를 할 수 있다고?!</span>
+                </a>
+                <!-- 이벤트 탭에 있던 더블빙고를 이쪽으로 이동 -->
+                <a href="#" onclick="confirmCreateRoom('doublebingo.html', '더블빙고')" class="mission-card">
+                    <span class="icon">🔠</span>
+                    <span class="m-title">더블빙고</span>
+                    <span class="m-desc">알파벳으로 진행되는 듀얼 빙고!</span>
                 </a>
                 <div class="mission-card locked">
                     <span class="icon">🔒</span>
@@ -144,11 +201,12 @@
             <!-- 새로 추가된 EVENT 구역 -->
             <div class="section-header">🎉 EVENT</div>
             <div class="mission-grid others">
-                <a href="#" onclick="confirmCreateRoom('doublebingo.html', '리카의 더블빙고')" class="mission-card event-card">
-                    <img src="리카.gif" alt="리카" class="event-img">
+                <!-- 수백이의 금고 털기 (클릭 시 모달 팝업 오픈) -->
+                <a href="#" onclick="openVaultModal()" class="mission-card event-card">
+                    <img src="수백이.jpg" alt="수백이" class="event-img">
                     <div class="event-text">
-                        <span class="m-title">리카의 더블빙고</span>
-                        <span class="m-desc">알파벳으로 진행되는 듀얼 빙고!</span>
+                        <span class="m-title">수백이의 금고 털기</span>
+                        <span class="m-desc">배그 킬/딜로 금고를 파괴하라!</span>
                     </div>
                 </a>
             </div>
@@ -158,13 +216,40 @@
     </div>
 
     <script>
+        // 일반 미션 방 생성
         function confirmCreateRoom(page, title) {
            if(confirm(`[${title}] 새로운 방을 생성하여 입장하시겠습니까?\n생성 후 우측 상단의 링크 복사 버튼을 통해 팀원을 초대하세요.`)) {
-           const roomId = crypto.randomUUID().replace(/-/g, '').substring(0, 10).toUpperCase();
-           location.href = `./${page}?room=${roomId}`;
+               const roomId = crypto.randomUUID().replace(/-/g, '').substring(0, 10).toUpperCase();
+               location.href = `./${page}?room=${roomId}`;
            }
         }
 
+        // 금고 털기 전용 모달 제어
+        function openVaultModal() {
+            document.getElementById('vaultModal').style.display = 'flex';
+        }
+
+        function closeVaultModal(e) {
+            if(e.target.id === 'vaultModal') {
+                document.getElementById('vaultModal').style.display = 'none';
+            }
+        }
+
+        // 금고 털기 방 생성 (선택한 모드에 따라 분기)
+        function createVaultRoom(mode) {
+            let title = mode === 'coop' ? '금고 털기 (협동)' : '금고 털기 (대결)';
+            let page = mode === 'coop' ? 'vault/vault.html' : 'vault/vault_comp.html';
+            
+            if(confirm(`[${title}] 새로운 방을 생성하여 입장하시겠습니까?\n(새 창으로 열립니다)`)) {
+                const roomId = crypto.randomUUID().replace(/-/g, '').substring(0, 10).toUpperCase();
+                
+                // vault 폴더 내의 페이지를 새 탭으로 띄움
+                window.open(`./${page}?room=${roomId}`, '_blank');
+                document.getElementById('vaultModal').style.display = 'none';
+            }
+        }
+
+        // 테마 제어
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
