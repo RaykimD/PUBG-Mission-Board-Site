@@ -26,8 +26,7 @@
     .modal-header h2 { margin: 0; font-size: 20px; color: var(--pubg-yellow); }
     .close-btn { background: transparent; border: none; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; }
     .modal-body { padding: 20px 30px; overflow-y: auto; font-size: 15px; line-height: 1.6; }
-    .modal-body h3 { color: #fff; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px;}
-    
+
     .global-win-overlay h2 { font-size: 70px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 40px rgba(255,255,255,0.3); animation: scale-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
     .global-win-overlay p { font-size: 24px; color: #e0e0e0; font-weight: bold; margin-bottom: 40px; animation: fade-in 1s ease-out 0.5s both; }
     .btn-restart-game { padding: 15px 40px; font-size: 20px; font-weight: bold; background: var(--pubg-red); color: white; border: 3px solid #b71c1c; border-radius: 8px; cursor: pointer; animation: fade-in 1s ease-out 1s both; }
@@ -47,11 +46,10 @@
     .team-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .team-color-picker { width: 28px; height: 28px; padding: 0; border: none; cursor: pointer; border-radius: 4px; background: transparent; }
     .team-name-input { background: transparent; border: none; text-align: center; font-size: 22px; font-weight: bold; width: 140px; text-shadow: 1px 1px 4px #000; transition: color 0.3s; }
-    .team-name-input:focus { outline: none; border-bottom: 1px dashed var(--border-color); }
     .t1-name { color: var(--t1-color); } .t2-name { color: var(--t2-color); }
     .hp-text { font-size: 22px; font-weight: bold; font-family: monospace; margin-bottom: 5px; }
     .hp-bar-bg { width: 100%; height: 20px; background: #111; border: 2px solid #000; border-radius: 10px; overflow: hidden; margin-bottom: 15px;}
-    .hp-bar-fill { height: 100%; transition: width 0.5s ease-out, background-color 0.3s; }
+    .hp-bar-fill { height: 100%; transition: width 0.5s ease-out; }
     #hpBar1 { background: var(--t1-color); } #hpBar2 { background: var(--t2-color); }
 
     .vault-display { width: 100%; max-width: 220px; height: 220px; border: 4px solid #111; border-radius: 10px; position: relative; background-image: url('금고.jpg'); background-size: cover; background-position: center; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box; }
@@ -61,9 +59,9 @@
     .shield-phase-1 { border: 4px solid #00d2ff; animation: pulse-blue 1.5s infinite alternate ease-in-out; }
     .shield-phase-2 { border: 5px solid #ff9800; animation: pulse-orange 1s infinite alternate ease-in-out; }
     .shield-phase-3 { border: 6px solid #ff0000; animation: pulse-red 0.6s infinite alternate ease-in-out; }
-    @keyframes pulse-blue { 0% { background: rgba(0, 150, 255, 0.1); box-shadow: inset 0 0 10px rgba(0, 150, 255, 0.2); } 100% { background: rgba(0, 150, 255, 0.4); box-shadow: inset 0 0 30px rgba(0, 150, 255, 0.8); } }
-    @keyframes pulse-orange { 0% { background: rgba(255, 152, 0, 0.15); box-shadow: inset 0 0 15px rgba(255, 152, 0, 0.3); } 100% { background: rgba(255, 152, 0, 0.5); box-shadow: inset 0 0 40px rgba(255, 152, 0, 0.9); } }
-    @keyframes pulse-red { 0% { background: rgba(255, 0, 0, 0.2); box-shadow: inset 0 0 20px rgba(255,0,0,0.5); } 100% { background: rgba(255, 0, 0, 0.6); box-shadow: inset 0 0 60px rgba(255,0,0,1); } }
+    @keyframes pulse-blue { 0% { box-shadow: inset 0 0 10px rgba(0, 150, 255, 0.2); } 100% { box-shadow: inset 0 0 30px rgba(0, 150, 255, 0.8); } }
+    @keyframes pulse-orange { 0% { box-shadow: inset 0 0 15px rgba(255, 152, 0, 0.3); } 100% { box-shadow: inset 0 0 40px rgba(255, 152, 0, 0.9); } }
+    @keyframes pulse-red { 0% { box-shadow: inset 0 0 20px rgba(255,0,0,0.5); } 100% { box-shadow: inset 0 0 60px rgba(255,0,0,1); } }
     .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
     @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
     .win-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 20; color: var(--pubg-yellow); font-size: 28px; font-weight: 900; text-shadow: 0 0 20px rgba(242,169,0,0.8); }
@@ -80,8 +78,8 @@
     .shield-solve-area { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; padding: 25px 30px; border-radius: 12px; border: 3px solid #fff; text-align: center; z-index: 5; width: 85%; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
     .shield-solve-area h3 { color: #fff; margin-top: 0; margin-bottom: 25px; font-size: 22px;}
     .btn-group-shield { display: flex; justify-content: center; gap: 15px; }
-    .btn-success { background-color: var(--pubg-green); color: white; padding: 12px 24px; font-weight: bold; border: 2px solid #2e7d32; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
-    .btn-fail { background-color: var(--pubg-red); color: white; padding: 12px 24px; font-weight: bold; border: 2px solid #b71c1c; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+    .btn-success { background-color: var(--pubg-green); color: white; padding: 12px 24px; font-weight: bold; border: 2px solid #2e7d32; border-radius: 6px; cursor: pointer; }
+    .btn-fail { background-color: var(--pubg-red); color: white; padding: 12px 24px; font-weight: bold; border: 2px solid #b71c1c; border-radius: 6px; cursor: pointer; }
 
     .player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px;}
     .p-name-input { background: transparent; border: none; color: var(--text-main); font-weight: bold; font-size: 15px; width: 100px; border-bottom: 1px dashed var(--border-color);}
@@ -110,7 +108,7 @@
 
 <div class="global-win-overlay" id="globalWinOverlay">
     <h2 id="globalWinText">WINNER TEAM 승리!!</h2>
-    <p>모든 금고의 잠금이 해제되었습니다. 레이 편집 종료됩니다.</p>
+    <p>모든 금고의 잠금이 해제되었습니다. 레이드가 종료됩니다.</p>
     <button class="btn-restart-game" onclick="window.resetGame()">새로운 대결 시작</button>
 </div>
 
@@ -122,17 +120,7 @@
         </div>
         <div class="modal-body">
             <h3>[기본 규칙]</h3>
-            <ul>
-                <li><strong>목표:</strong> 배그 킬/딜량을 포인트로 환산하여 상대보다 먼저 금고를 파괴하세요!</li>
-                <li><strong>데미지:</strong> 1딜 = 1점 / 1킬 = 200~400점 랜덤</li>
-                <li>🍗 <strong>치킨:</strong> 치킨 달성 시 해당 판 획득 데미지 2배 적용</li>
-            </ul>
-            <h3>[🛡️ 금고 비상 쉴드 (돌발 미션)]</h3>
-            <ul>
-                <li>금고 체력 66%, 33%, 10% 이하 도달 시 비상 쉴드 가동</li>
-                <li>✅ <strong>성공:</strong> 다음 타격 크리티컬 확률 50% 버프</li>
-                <li>❌ <strong>실패:</strong> 페널티로 금고 체력 5% 회복</li>
-            </ul>
+            <ul><li>배그 킬/딜량을 포인트로 환산하여 상대보다 먼저 금고 파괴</li><li>1딜 = 1점 / 1킬 = 200~400점 랜덤</li><li>치킨 달성 시 데미지 2배</li></ul>
         </div>
     </div>
 </div>
@@ -148,7 +136,6 @@
 
 <div class="header">
     <h1>금고 털기 <span style="color:#888;">|</span> 대결 모드</h1>
-    <div class="sub-title">먼저 금고를 파괴하는 팀이 모든 것을 가져간다!</div>
 </div>
 
 <div class="setup-area" id="setupArea">
@@ -160,7 +147,6 @@
 <div class="main-container" id="mainContainer">
     <div class="game-board">
         <div class="versus-arena">
-            <!-- Team 1 Vault -->
             <div class="team-vault-container">
                 <div class="team-header">
                     <input type="color" class="team-color-picker" id="t1Color" value="#00a8ff" onchange="window.updateTeamInfo(1)">
@@ -169,16 +155,13 @@
                 <div class="hp-text"><span id="hpText1">50,000</span></div>
                 <div class="hp-bar-bg"><div class="hp-bar-fill" id="hpBar1"></div></div>
                 <div class="vault-display" id="vaultImg1">
-                    <div class="shield-overlay" id="shieldUI1">
-                        <h3>🛡️ 쉴드 가동</h3><p id="shieldDesc1">미션 로딩 중...</p>
-                    </div>
+                    <div class="shield-overlay" id="shieldUI1"><h3>🛡️ 쉴드 가동</h3><p id="shieldDesc1">미션 로딩 중...</p></div>
                     <div class="win-overlay" id="win1">WINNER!</div>
                 </div>
             </div>
 
             <div class="vs-badge">VS</div>
 
-            <!-- Team 2 Vault -->
             <div class="team-vault-container">
                 <div class="team-header">
                     <input type="color" class="team-color-picker" id="t2Color" value="#e84118" onchange="window.updateTeamInfo(2)">
@@ -187,9 +170,7 @@
                 <div class="hp-text"><span id="hpText2">50,000</span></div>
                 <div class="hp-bar-bg"><div class="hp-bar-fill" id="hpBar2"></div></div>
                 <div class="vault-display" id="vaultImg2">
-                    <div class="shield-overlay" id="shieldUI2">
-                        <h3>🛡️ 쉴드 가동</h3><p id="shieldDesc2">미션 로딩 중...</p>
-                    </div>
+                    <div class="shield-overlay" id="shieldUI2"><h3>🛡️ 쉴드 가동</h3><p id="shieldDesc2">미션 로딩 중...</p></div>
                     <div class="win-overlay" id="win2">WINNER!</div>
                 </div>
             </div>
@@ -209,7 +190,7 @@
                 </div>
             </div>
 
-            <!-- Team 1 폼 -->
+            <!-- Team 1 -->
             <div class="tab-content active" id="tab1">
                 <script>
                     for(let i=0; i<4; i++) {
@@ -229,7 +210,7 @@
                 </div>
             </div>
 
-            <!-- Team 2 폼 -->
+            <!-- Team 2 -->
             <div class="tab-content" id="tab2">
                 <script>
                     for(let i=0; i<4; i++) {
@@ -252,86 +233,45 @@
     </div>
 
     <div class="log-board">
-        <h3>ACTION LOG</h3>
-        <div class="log-content" id="logContent"></div>
+        <h3>ACTION LOG</h3><div class="log-content" id="logContent"></div>
     </div>
 </div>
 
 <script type="module">
-    // 🔥 Firebase 연동 모듈 불러오기
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyDoExj9y1DAIZZYLu5g2H3FcexpPkLyfW4", authDomain: "pubg-mission-site.firebaseapp.com", projectId: "pubg-mission-site", storageBucket: "pubg-mission-site.firebasestorage.app", messagingSenderId: "26055063441", appId: "1:26055063441:web:f942888d592eb210924c30" };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
+    const app = initializeApp(firebaseConfig); const db = getFirestore(app);
     const roomId = new URLSearchParams(window.location.search).get('room') || "default_vault_comp";
     const roomRef = doc(db, "vault_comp_rooms", roomId);
 
-    // 서버 공유 상태 데이터 (플레이어 입력칸 동기화 포함)
     let state = {
         isStarted: false, maxHp: 50000,
         teams: {
-            1: { 
-                hp: 50000, phase: 0, buff: false, activeShield: false, mission: "", name: "TEAM 1", color: "#00a8ff",
-                players: [{name: "Player 1", k:"", d:""},{name: "Player 2", k:"", d:""},{name: "Player 3", k:"", d:""},{name: "Player 4", k:"", d:""}],
-                isChicken: false
-            },
-            2: { 
-                hp: 50000, phase: 0, buff: false, activeShield: false, mission: "", name: "TEAM 2", color: "#e84118",
-                players: [{name: "Player 1", k:"", d:""},{name: "Player 2", k:"", d:""},{name: "Player 3", k:"", d:""},{name: "Player 4", k:"", d:""}],
-                isChicken: false
-            }
+            1: { hp: 50000, phase: 0, buff: false, activeShield: false, mission: "", name: "TEAM 1", color: "#00a8ff", players: [{name: "Player 1", k:"", d:"", totalK:0, totalD:0},{name: "Player 2", k:"", d:"", totalK:0, totalD:0},{name: "Player 3", k:"", d:"", totalK:0, totalD:0},{name: "Player 4", k:"", d:"", totalK:0, totalD:0}], isChicken: false },
+            2: { hp: 50000, phase: 0, buff: false, activeShield: false, mission: "", name: "TEAM 2", color: "#e84118", players: [{name: "Player 1", k:"", d:"", totalK:0, totalD:0},{name: "Player 2", k:"", d:"", totalK:0, totalD:0},{name: "Player 3", k:"", d:"", totalK:0, totalD:0},{name: "Player 4", k:"", d:"", totalK:0, totalD:0}], isChicken: false }
         },
         logs: [], isGameOver: false, winnerId: 0, shakeTrigger: {1:0, 2:0}
     };
     
-    let localShake1 = 0; let localShake2 = 0;
-    let currentTab = 1;
+    let localShake1 = 0; let localShake2 = 0; let currentTab = 1;
+    const missions = { 1: ["투척무기 1킬", "팀 합산 5킬", "팀 합산 500딜", "차 없이 탑 20 생존", "SR 1킬"], 2: ["투척무기 3킬", "팀 합산 8킬", "팀 합산 1000딜", "차 없이 탑 10 생존", "판처파우스트 1킬"], 3: ["C4/근접투척 1킬", "팀 합산 11킬", "팀 합산 1500딜", "차 없이 탑 5 생존", "권총 1킬"] };
 
-    const missions = {
-        1: ["투척무기 1킬", "팀 합산 5킬", "팀 합산 500딜", "차 없이 탑 20 생존", "SR 1킬"],
-        2: ["투척무기 3킬", "팀 합산 8킬", "팀 합산 1000딜", "차 없이 탑 10 생존", "판처파우스트 1킬"],
-        3: ["C4/근접투척 1킬", "팀 합산 11킬", "팀 합산 1500딜", "차 없이 탑 5 생존", "권총 1킬"]
-    };
-
-    onSnapshot(roomRef, (snap) => {
-        const data = snap.data();
-        if (data) { state = data; updateUI(); }
-    });
-
+    onSnapshot(roomRef, (snap) => { const data = snap.data(); if (data) { state = data; updateUI(); } });
     async function syncData() { await setDoc(roomRef, state); }
 
-    // ✅ 사용자가 입력할 때마다 즉시 서버 연동
-    window.updateInput = (teamId, playerIdx, field, value) => {
-        state.teams[teamId].players[playerIdx][field] = value;
-        syncData();
-    };
-
-    window.updateChicken = (teamId, isChecked) => {
-        state.teams[teamId].isChicken = isChecked;
-        syncData();
-    };
-
-    window.updateTeamInfo = (teamId) => {
-        state.teams[teamId].name = document.getElementById(`t${teamId}Name`).value;
-        state.teams[teamId].color = document.getElementById(`t${teamId}Color`).value;
-        syncData();
-    };
+    window.updateInput = (teamId, playerIdx, field, value) => { state.teams[teamId].players[playerIdx][field] = value; syncData(); };
+    window.updateChicken = (teamId, isChecked) => { state.teams[teamId].isChicken = isChecked; syncData(); };
+    window.updateTeamInfo = (teamId) => { state.teams[teamId].name = document.getElementById(`t${teamId}Name`).value; state.teams[teamId].color = document.getElementById(`t${teamId}Color`).value; syncData(); };
 
     window.startGame = () => {
-        let hp = parseInt(document.getElementById('initHp').value);
-        if(isNaN(hp) || hp <= 0) return alert("올바른 체력을 입력하세요.");
-        
+        let hp = parseInt(document.getElementById('initHp').value); if(isNaN(hp) || hp <= 0) return alert("올바른 체력을 입력하세요.");
         state.maxHp = hp; state.isStarted = true; state.isGameOver = false; state.winnerId = 0;
         state.logs = [`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:18px;">⚔️ 4 VS 4 대결 레이드가 시작되었습니다!</div></summary><div class="log-detail-content">목표 체력: ${hp.toLocaleString()} HP</div></details>`];
-        
         [1, 2].forEach(id => {
-            state.teams[id].hp = hp; state.teams[id].phase = 0;
-            state.teams[id].buff = false; state.teams[id].activeShield = false;
-            state.teams[id].players.forEach(p => { p.k = ""; p.d = ""; });
-            state.teams[id].isChicken = false;
+            state.teams[id].hp = hp; state.teams[id].phase = 0; state.teams[id].buff = false; state.teams[id].activeShield = false;
+            state.teams[id].players.forEach(p => { p.k = ""; p.d = ""; p.totalK = 0; p.totalD = 0; }); state.teams[id].isChicken = false;
         });
         syncData();
     };
@@ -340,54 +280,43 @@
 
     window.switchTab = (teamId) => {
         currentTab = teamId;
-        document.getElementById('btnTab1').className = `tab-btn ${teamId===1 ? 't1-active' : ''}`;
-        document.getElementById('btnTab2').className = `tab-btn ${teamId===2 ? 't2-active' : ''}`;
-        document.getElementById('tab1').style.display = teamId===1 ? 'flex' : 'none';
-        document.getElementById('tab2').style.display = teamId===2 ? 'flex' : 'none';
-        checkShieldUI(teamId);
+        document.getElementById('btnTab1').className = `tab-btn ${teamId===1 ? 't1-active' : ''}`; document.getElementById('btnTab2').className = `tab-btn ${teamId===2 ? 't2-active' : ''}`;
+        document.getElementById('tab1').style.display = teamId===1 ? 'flex' : 'none'; document.getElementById('tab2').style.display = teamId===2 ? 'flex' : 'none'; checkShieldUI(teamId);
     };
 
     function checkShieldUI(teamId) {
-        const solveArea = document.getElementById('solveArea');
-        const tab = document.getElementById(`tab${teamId}`);
+        const solveArea = document.getElementById('solveArea'); const tab = document.getElementById(`tab${teamId}`);
         if (state.teams[teamId].activeShield && !state.isGameOver) {
-            tab.classList.add('shield-active'); solveArea.style.display = 'block';
-            document.getElementById('solveTitle').innerText = `${state.teams[teamId].name} 쉴드 미션 진행 중!`;
-            document.getElementById('solveTitle').style.color = state.teams[teamId].color;
-        } else {
-            tab.classList.remove('shield-active'); solveArea.style.display = 'none';
-        }
+            tab.classList.add('shield-active'); solveArea.style.display = 'block'; document.getElementById('solveTitle').innerText = `${state.teams[teamId].name} 쉴드 미션 진행 중!`; document.getElementById('solveTitle').style.color = state.teams[teamId].color;
+        } else { tab.classList.remove('shield-active'); solveArea.style.display = 'none'; }
     }
 
     window.strikeVault = (teamId) => {
         if(state.isGameOver || state.teams[teamId].activeShield) return;
         
         let totalK = 0, totalD = 0;
+        // ✅ 누적 스탯 업데이트
         state.teams[teamId].players.forEach(p => {
-            totalK += parseInt(p.k || 0);
-            totalD += parseInt(p.d || 0);
+            let k = parseInt(p.k || 0); let d = parseInt(p.d || 0);
+            totalK += k; totalD += d;
+            p.totalK += k; p.totalD += d;
         });
 
         if(totalK === 0 && totalD === 0) return alert("값을 입력하세요.");
 
         let killDmg = 0; let killDetails = [];
         for(let i=0; i<totalK; i++) { let roll = Math.floor(Math.random() * 201) + 200; killDmg += roll; killDetails.push(roll); }
-        let baseTotal = killDmg + totalD;
-        let finalDmg = 0; let logTxt = ""; let logClass = "log-normal";
+        let baseTotal = killDmg + totalD; let finalDmg = 0; let logTxt = ""; let logClass = "log-normal";
 
-        if (state.teams[teamId].isChicken) {
-            finalDmg = baseTotal * 2; logTxt = `🍗 치킨 달성! (x2)`; logClass = "log-chicken"; state.teams[teamId].buff = false;
+        if (state.teams[teamId].isChicken) { finalDmg = baseTotal * 2; logTxt = `🍗 치킨 달성! (x2)`; logClass = "log-chicken"; state.teams[teamId].buff = false;
         } else {
             let isCrit = Math.random() < (state.teams[teamId].buff ? 0.5 : 0.1);
-            if (isCrit) {
-                finalDmg = Math.floor(baseTotal * 1.5); logTxt = `⚡ 크리티컬 히트! (x1.5)`; logClass = "log-crit";
-                if(state.teams[teamId].buff) logTxt = `[버프적용] ` + logTxt;
+            if (isCrit) { finalDmg = Math.floor(baseTotal * 1.5); logTxt = `⚡ 크리티컬 히트! (x1.5)`; logClass = "log-crit"; if(state.teams[teamId].buff) logTxt = `[버프적용] ` + logTxt;
             } else { finalDmg = baseTotal; logTxt = `💥 일반 타격`; }
             state.teams[teamId].buff = false; 
         }
 
-        state.teams[teamId].hp -= finalDmg;
-        if(state.teams[teamId].hp < 0) state.teams[teamId].hp = 0;
+        state.teams[teamId].hp -= finalDmg; if(state.teams[teamId].hp < 0) state.teams[teamId].hp = 0;
 
         let tNameHtml = `<span style="color:${state.teams[teamId].color}">[${state.teams[teamId].name}]</span>`;
         let detailHtml = `<div class="log-detail-content">🔸 합산 기록: ${totalK}킬 / ${totalD}딜<br>🔸 킬 타격(${killDmg}점): [${killDetails.join(', ')}]<br>🔸 딜량 타격: ${totalD}점</div>`;
@@ -395,10 +324,7 @@
         state.logs.push(`<details class="log-entry ${logClass}"><summary><div class="log-title">${tNameHtml} ${logTxt}</div><div class="log-dmg">➔ 💥 ${finalDmg.toLocaleString()} 타격</div></summary>${detailHtml}</details>`);
         state.shakeTrigger[teamId]++;
 
-        // 타격 후 팀의 입력칸 비우기
-        state.teams[teamId].players.forEach(p => { p.k = ""; p.d = ""; });
-        state.teams[teamId].isChicken = false;
-
+        state.teams[teamId].players.forEach(p => { p.k = ""; p.d = ""; }); state.teams[teamId].isChicken = false;
         checkPhase(teamId); syncData();
     };
 
@@ -411,6 +337,16 @@
         else if (t.hp <= 0 && t.phase === 3) {
             state.isGameOver = true; state.winnerId = teamId;
             state.logs.push(`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:18px;">🏆 ${t.name} 최종 승리!! 금고 파괴 성공!!</div></summary></details>`);
+            
+            // ✅ 최종 개인 스탯 로그 추가 (양 팀 모두 표시)
+            let statsHtml = "";
+            [1, 2].forEach(id => {
+                let tm = state.teams[id];
+                statsHtml += `<div style="margin-bottom:10px;"><strong style="color:${tm.color}; font-size:14px;">[${tm.name}]</strong><br>`;
+                statsHtml += tm.players.map(p => `${p.name} : ${p.totalK}킬 / ${p.totalD.toLocaleString()}딜`).join('<br>');
+                statsHtml += `</div>`;
+            });
+            state.logs.push(`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:16px;">📊 양 팀 최종 기여도 (개인 스탯)</div></summary><div class="log-detail-content" style="line-height:1.6;">${statsHtml}</div></details>`);
         }
     }
 
@@ -424,10 +360,8 @@
     window.resolveShield = (isSuccess) => {
         let teamId = currentTab; let t = state.teams[teamId]; t.activeShield = false;
         let tNameHtml = `<span style="color:${t.color}">[${t.name}]</span>`;
-
         if(isSuccess) {
-            t.buff = true;
-            state.logs.push(`<details class="log-entry"><summary><div class="log-title" style="color:var(--pubg-green);">✅ ${tNameHtml} 미션 성공! (다음 타격 50% 크리 버프)</div></summary></details>`);
+            t.buff = true; state.logs.push(`<details class="log-entry"><summary><div class="log-title" style="color:var(--pubg-green);">✅ ${tNameHtml} 미션 성공! (다음 타격 50% 크리 버프)</div></summary></details>`);
             if(t.phase === 3 && t.hp <= 0) checkPhase(teamId);
         } else {
             let heal = Math.floor(state.maxHp * 0.05); t.hp += heal; if(t.hp > state.maxHp) t.hp = state.maxHp;
@@ -437,23 +371,15 @@
     };
 
     function updateUI() {
-        if(!state.isStarted) {
-            document.getElementById('setupArea').style.display = 'flex'; document.getElementById('mainContainer').style.display = 'none';
-            document.getElementById('globalWinOverlay').style.display = 'none'; document.getElementById('win1').style.display = 'none'; document.getElementById('win2').style.display = 'none'; return;
-        }
-
+        if(!state.isStarted) { document.getElementById('setupArea').style.display = 'flex'; document.getElementById('mainContainer').style.display = 'none'; document.getElementById('globalWinOverlay').style.display = 'none'; document.getElementById('win1').style.display = 'none'; document.getElementById('win2').style.display = 'none'; return; }
         document.getElementById('setupArea').style.display = 'none'; document.getElementById('mainContainer').style.display = 'flex';
 
         [1, 2].forEach(id => {
             let t = state.teams[id];
-            
-            // 팀명, 컬러
             if(document.activeElement.id !== `t${id}Name`) document.getElementById(`t${id}Name`).value = t.name;
-            document.documentElement.style.setProperty(`--t${id}-color`, t.color);
-            document.getElementById(`t${id}Color`).value = t.color;
+            document.documentElement.style.setProperty(`--t${id}-color`, t.color); document.getElementById(`t${id}Color`).value = t.color;
             document.getElementById(`btnTab${id}`).innerHTML = `${id===1 ? '🟦' : '🟥'} ${t.name} 입력`;
 
-            // ✅ 개별 플레이어 입력칸 실시간 동기화
             for (let i=0; i<4; i++) {
                 let p = t.players[i];
                 if(document.activeElement.id !== `t${id}pName${i}`) document.getElementById(`t${id}pName${i}`).value = p.name;
@@ -466,10 +392,7 @@
             let pct = (t.hp / state.maxHp) * 100; document.getElementById(`hpBar${id}`).style.width = pct + '%';
             
             const shieldUI = document.getElementById(`shieldUI${id}`);
-            if(t.activeShield && !state.isGameOver) {
-                shieldUI.className = `shield-overlay shield-phase-${t.phase}`; shieldUI.style.display = 'flex';
-                document.getElementById(`shieldDesc${id}`).innerText = `🎯 [미션] ${t.mission}`;
-            } else { shieldUI.style.display = 'none'; }
+            if(t.activeShield && !state.isGameOver) { shieldUI.className = `shield-overlay shield-phase-${t.phase}`; shieldUI.style.display = 'flex'; document.getElementById(`shieldDesc${id}`).innerText = `🎯 [미션] ${t.mission}`; } else { shieldUI.style.display = 'none'; }
 
             if(state.shakeTrigger[id] > (id===1 ? localShake1 : localShake2)) {
                 if(id===1) localShake1 = state.shakeTrigger[id]; else localShake2 = state.shakeTrigger[id];
@@ -478,10 +401,8 @@
         });
 
         checkShieldUI(currentTab);
-        document.getElementById('btnStrike1').disabled = state.isGameOver;
-        document.getElementById('btnStrike2').disabled = state.isGameOver;
-        document.getElementById('logContent').innerHTML = state.logs.join('');
-        document.getElementById('logContent').scrollTop = document.getElementById('logContent').scrollHeight;
+        document.getElementById('btnStrike1').disabled = state.isGameOver; document.getElementById('btnStrike2').disabled = state.isGameOver;
+        document.getElementById('logContent').innerHTML = state.logs.join(''); document.getElementById('logContent').scrollTop = document.getElementById('logContent').scrollHeight;
 
         if(state.isGameOver && state.winnerId > 0) {
             document.getElementById(`win${state.winnerId}`).style.display = 'flex';
