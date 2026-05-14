@@ -27,6 +27,19 @@
     .modal-body { padding: 20px 30px; overflow-y: auto; font-size: 15px; line-height: 1.6; color: var(--text-main); }
     .modal-body h3 { color: #fff; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px;}
 
+    /* ✅ 결과창 팝업 스타일 (닫기 버튼 추가) */
+    .global-win-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); background: rgba(0,0,0,0.9); flex-direction: column; text-align: center; }
+    .global-win-overlay h2 { font-size: 60px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 30px rgba(242,169,0,0.5); animation: scale-up 0.5s both; color: var(--pubg-yellow);}
+    .reward-box { font-size: 32px; color: #fff; font-weight: bold; margin-bottom: 30px; animation: fade-in 1s ease-out 0.3s both; }
+    .stats-box { background: rgba(0,0,0,0.6); border: 2px solid var(--pubg-yellow); border-radius: 10px; padding: 30px; width: 450px; max-width: 90%; margin-bottom: 40px; animation: fade-in 1s ease-out 0.6s both; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 20px; margin-bottom: 15px; font-weight: bold; }
+    .btn-restart-game { padding: 15px 30px; font-size: 18px; font-weight: bold; background: var(--pubg-red); color: white; border: 3px solid #b71c1c; border-radius: 8px; cursor: pointer; animation: fade-in 1s ease-out 1s both; transition:0.2s;}
+    .btn-restart-game:hover { background: #ff4d4d; transform:scale(1.05); }
+    .btn-close-overlay { padding: 15px 30px; font-size: 18px; font-weight: bold; background: #555; color: white; border: 3px solid #333; border-radius: 8px; cursor: pointer; animation: fade-in 1s ease-out 1s both; transition: 0.2s;}
+    .btn-close-overlay:hover { background: #777; transform:scale(1.05); }
+    @keyframes scale-up { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes fade-in { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+
     .setup-area { background: var(--panel-bg); padding: 20px 40px; border: 2px solid var(--border-color); margin-bottom: 20px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
     .setup-row { display: flex; align-items: center; gap: 10px; }
     .setup-area input { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; width: 100px; font-size: 16px; text-align: center; font-weight: bold; }
@@ -99,6 +112,19 @@
 </head>
 <body>
 
+<!-- ✅ 최종 레이드 결과창 오버레이 (닫기 버튼 추가) -->
+<div class="global-win-overlay" id="coopWinOverlay">
+    <h2>🎉 레이드 성공!!</h2>
+    <div class="reward-box">금괴 보상: <span id="finalRewardText" style="color:var(--pubg-yellow); font-size:42px;">0</span>개 획득!</div>
+    <div class="stats-box" id="coopStatsBox">
+        <!-- 스탯이 여기에 동적으로 들어감 -->
+    </div>
+    <div style="display: flex; gap: 15px; justify-content: center;">
+        <button class="btn-restart-game" onclick="window.resetGame()">새로운 레이드 시작</button>
+        <button class="btn-close-overlay" onclick="document.getElementById('coopWinOverlay').style.display='none'">닫기 (로그 확인)</button>
+    </div>
+</div>
+
 <div class="modal-overlay" id="ruleModal" onclick="window.closeModal(event, 'ruleModal')">
     <div class="modal-content">
         <div class="modal-header">
@@ -131,7 +157,7 @@
 <div class="setup-area" id="setupArea">
     <div class="setup-row"><label>금고 체력: </label><input type="number" id="initHp" value="50000" step="1000"></div>
     <div class="setup-row" style="color:var(--pubg-yellow); font-weight:bold;">
-        <span>💰 금괴 보상: </span><input type="number" id="minReward" value="50000"> 개 ~ <input type="number" id="maxReward" value="1000"> 개
+        <span>💰 금괴 보상: </span><input type="number" id="minReward" value="5000"> 개 ~ <input type="number" id="maxReward" value="20000"> 개
     </div>
     <button onclick="window.startGame()">레이드 시작</button>
 </div>
@@ -210,7 +236,7 @@
         isChicken: false
     };
 
-    let localShakeTrigger = 0; let isRoulettePlayed = false;
+    let localShakeTrigger = 0; let isRoulettePlayed = false; let isOverlayShown = false;
     const missions = { 1: ["투척무기 1킬", "팀 합산 5킬", "팀 합산 500딜", "차 없이 탑 20 생존", "SR 1킬"], 2: ["투척무기 3킬", "팀 합산 8킬", "팀 합산 1000딜", "차 없이 탑 10 생존", "판처파우스트 1킬"], 3: ["C4/근접투척 1킬", "팀 합산 11킬", "팀 합산 1500딜", "차 없이 탑 5 생존", "권총 1킬"] };
 
     onSnapshot(roomRef, (snap) => { const data = snap.data(); if (data) { state = data; updateUI(); } });
@@ -228,6 +254,8 @@
         state.isGameOver = false; state.finalReward = 0; state.shakeTrigger = 0;
         state.logs = [`<details class="log-entry log-sys" open><summary><div class="log-title">[SYSTEM] 금고 레이드가 시작되었습니다.</div></summary><div class="log-detail-content">목표 체력: ${hp.toLocaleString()} HP</div></details>`];
         state.players.forEach(p => { p.kill = ""; p.dmg = ""; p.totalK = 0; p.totalD = 0; }); state.isChicken = false;
+        
+        isOverlayShown = false; document.getElementById('coopWinOverlay').style.display = 'none';
         syncData();
     };
 
@@ -237,11 +265,11 @@
         if(state.activeShield || state.isGameOver) return;
         
         let totalK = 0, totalD = 0;
-        // ✅ 누적 스탯 업데이트
         state.players.forEach(p => {
             let k = parseInt(p.kill || 0); let d = parseInt(p.dmg || 0);
             totalK += k; totalD += d;
-            p.totalK += k; p.totalD += d;
+            p.totalK = (p.totalK || 0) + k; 
+            p.totalD = (p.totalD || 0) + d;
         });
         
         if(totalK === 0 && totalD === 0) return alert("값을 입력하세요.");
@@ -279,9 +307,8 @@
             state.finalReward = Math.floor(Math.random() * (state.maxReward - state.minReward + 1) + state.minReward);
             state.logs.push(`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:18px;">🎉 금고 파괴 성공!! 레이드 종료!!</div></summary></details>`);
             
-            // ✅ 최종 개인 스탯 로그 추가
-            let statsHtml = state.players.map(p => `<strong style="color:${p.color};">${p.name}</strong> : ${p.totalK}킬 / ${p.totalD.toLocaleString()}딜`).join('<br>');
-            state.logs.push(`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:16px;">📊 최종 레이드 기여도 (개인 스탯)</div></summary><div class="log-detail-content" style="font-size:14px; line-height:1.8;">${statsHtml}</div></details>`);
+            let statsHtmlLog = state.players.map(p => `<strong style="color:${p.color};">${p.name}</strong> : ${p.totalK || 0}킬 / ${(p.totalD || 0).toLocaleString()}딜`).join('<br>');
+            state.logs.push(`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:16px;">📊 최종 레이드 기여도 (개인 스탯)</div></summary><div class="log-detail-content" style="font-size:14px; line-height:1.8;">${statsHtmlLog}</div></details>`);
         }
     }
 
@@ -304,7 +331,11 @@
     };
 
     function updateUI() {
-        if(!state.isStarted) { document.getElementById('setupArea').style.display = 'flex'; document.getElementById('mainContainer').style.display = 'none'; isRoulettePlayed = false; document.getElementById('rouletteUI').style.display = 'none'; return; }
+        if(!state.isStarted) { 
+            document.getElementById('setupArea').style.display = 'flex'; document.getElementById('mainContainer').style.display = 'none'; 
+            document.getElementById('coopWinOverlay').style.display = 'none'; isOverlayShown = false;
+            isRoulettePlayed = false; document.getElementById('rouletteUI').style.display = 'none'; return; 
+        }
         document.getElementById('setupArea').style.display = 'none'; document.getElementById('mainContainer').style.display = 'flex';
         document.getElementById('maxHpText').innerText = state.maxHp.toLocaleString(); document.getElementById('currentHpText').innerText = state.currentHp.toLocaleString();
         
@@ -343,6 +374,22 @@
                     state.logs.push(`<details class="log-entry log-sys" open><summary><div class="log-title" style="font-size:22px; margin-top:10px;">💰 최종 보상: ${finalResult.toLocaleString()}개 당첨!!</div></summary></details>`);
                     syncData();
                 }
+                
+                // ✅ 룰렛 종료 후 팝업 띄우기 (닫은 적이 없을 때만)
+                setTimeout(() => {
+                    if (!isOverlayShown) {
+                        isOverlayShown = true;
+                        document.getElementById('finalRewardText').innerText = finalResult.toLocaleString();
+                        let statsPopupHtml = state.players.map(p => `
+                            <div class="stat-row">
+                                <span style="color:${p.color};">${p.name}</span>
+                                <span style="color:#fff;">${p.totalK || 0}킬 / ${(p.totalD || 0).toLocaleString()}딜</span>
+                            </div>
+                        `).join('');
+                        document.getElementById('coopStatsBox').innerHTML = statsPopupHtml;
+                        document.getElementById('coopWinOverlay').style.display = 'flex';
+                    }
+                }, 2000);
             }
         }, 50);
     }
