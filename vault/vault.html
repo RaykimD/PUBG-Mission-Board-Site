@@ -26,6 +26,8 @@
     .close-btn { background: transparent; border: none; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; line-height: 1;}
     .modal-body { padding: 20px 30px; overflow-y: auto; font-size: 15px; line-height: 1.6; color: var(--text-main); }
     .modal-body h3 { color: #fff; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px;}
+    .modal-body ul { margin-bottom: 20px; }
+    .modal-body li { margin-bottom: 6px; }
 
     /* ✅ 결과창 팝업 스타일 (닫기 버튼 추가) */
     .global-win-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); background: rgba(0,0,0,0.9); flex-direction: column; text-align: center; }
@@ -112,13 +114,11 @@
 </head>
 <body>
 
-<!-- ✅ 최종 레이드 결과창 오버레이 (닫기 버튼 추가) -->
 <div class="global-win-overlay" id="coopWinOverlay">
     <h2>🎉 레이드 성공!!</h2>
     <div class="reward-box">금괴 보상: <span id="finalRewardText" style="color:var(--pubg-yellow); font-size:42px;">0</span>개 획득!</div>
     <div class="stats-box" id="coopStatsBox">
-        <!-- 스탯이 여기에 동적으로 들어감 -->
-    </div>
+        </div>
     <div style="display: flex; gap: 15px; justify-content: center;">
         <button class="btn-restart-game" onclick="window.resetGame()">새로운 레이드 시작</button>
         <button class="btn-close-overlay" onclick="document.getElementById('coopWinOverlay').style.display='none'">닫기 (로그 확인)</button>
@@ -137,7 +137,13 @@
                 <li><strong>목표:</strong> 배그 킬/딜량을 환산하여 금고 파괴</li>
                 <li><strong>데미지:</strong> 1딜 = 1점 / 1킬 = 200~400점 랜덤</li>
                 <li>🍗 <strong>치킨:</strong> 해당 판 데미지 2배</li>
-                <li>⚡ <strong>크리티컬:</strong> 10% 확률로 데미지 1.5배</li>
+                <li>⚡ <strong>크리티컬:</strong> 기본 10% 확률로 데미지 1.5배</li>
+            </ul>
+            <h3>[🛡️ 쉴드 미션 규칙]</h3>
+            <ul>
+                <li><strong>발생 구간:</strong> 금고 체력 <strong>80%, 55%, 20%</strong> 도달 시 쉴드 가동</li>
+                <li>✅ <strong>성공 시 보상:</strong> 금고 최대 체력의 <strong>10% 즉시 차감!</strong></li>
+                <li>❌ <strong>실패 시 페널티:</strong> 금고 최대 체력의 <strong>5% 회복</strong></li>
             </ul>
         </div>
     </div>
@@ -225,7 +231,7 @@
 
     let state = {
         isStarted: false, maxHp: 50000, currentHp: 50000, minReward: 5000, maxReward: 20000,
-        critBuff: false, shieldPhase: 0, activeShield: false, currentMission: "",
+        shieldPhase: 0, activeShield: false, currentMission: "",
         logs: [], isGameOver: false, finalReward: 0, shakeTrigger: 0,
         players: [
             { name: "Player 1", color: "#f2a900", kill: "", dmg: "", totalK: 0, totalD: 0 },
@@ -250,7 +256,7 @@
         if(isNaN(hp) || hp <= 0 || minR > maxR) return alert("설정값을 확인하세요.");
 
         state.isStarted = true; state.maxHp = hp; state.currentHp = hp; state.minReward = minR; state.maxReward = maxR;
-        state.critBuff = false; state.shieldPhase = 0; state.activeShield = false; state.currentMission = "";
+        state.shieldPhase = 0; state.activeShield = false; state.currentMission = "";
         state.isGameOver = false; state.finalReward = 0; state.shakeTrigger = 0;
         state.logs = [`<details class="log-entry log-sys" open><summary><div class="log-title">[SYSTEM] 금고 레이드가 시작되었습니다.</div></summary><div class="log-detail-content">목표 체력: ${hp.toLocaleString()} HP</div></details>`];
         state.players.forEach(p => { p.kill = ""; p.dmg = ""; p.totalK = 0; p.totalD = 0; }); state.isChicken = false;
@@ -278,12 +284,12 @@
         for(let i=0; i<totalK; i++) { let r = Math.floor(Math.random() * 201) + 200; killDmg += r; killDetails.push(r); }
         let baseTotal = killDmg + totalD; let finalDmg = 0; let logTitle = ""; let logClass = "log-normal";
 
-        if (state.isChicken) { finalDmg = baseTotal * 2; logTitle = `🍗 치킨 달성! (x2)`; logClass = "log-chicken"; state.critBuff = false; 
+        if (state.isChicken) { 
+            finalDmg = baseTotal * 2; logTitle = `🍗 치킨 달성! (x2)`; logClass = "log-chicken"; 
         } else {
-            let isCrit = Math.random() < (state.critBuff ? 0.5 : 0.1);
-            if (isCrit) { finalDmg = Math.floor(baseTotal * 1.5); logTitle = `⚡ 크리티컬 히트! (x1.5)`; if(state.critBuff) logTitle = `[버프적용] ` + logTitle; logClass = "log-crit";
+            let isCrit = Math.random() < 0.1; // 기본 10% 크리티컬 유지
+            if (isCrit) { finalDmg = Math.floor(baseTotal * 1.5); logTitle = `⚡ 크리티컬 히트! (x1.5)`; logClass = "log-crit";
             } else { finalDmg = baseTotal; logTitle = `💥 일반 타격`; }
-            state.critBuff = false; 
         }
 
         state.currentHp -= finalDmg; if(state.currentHp < 0) state.currentHp = 0;
@@ -298,10 +304,12 @@
 
     function checkState() {
         let pct = (state.currentHp / state.maxHp) * 100;
-        if (state.currentHp <= 0 && state.shieldPhase < 3) triggerShield(3, 10);
-        else if (pct <= 66 && state.shieldPhase === 0) triggerShield(1, 66);
-        else if (pct <= 33 && state.shieldPhase === 1) triggerShield(2, 33);
-        else if (pct <= 10 && state.shieldPhase === 2) triggerShield(3, 10);
+        
+        // 🔥 쉴드 발동 구간: 80%, 55%, 20%
+        if (state.currentHp <= 0 && state.shieldPhase < 3) triggerShield(3, 20);
+        else if (pct <= 80 && state.shieldPhase === 0) triggerShield(1, 80);
+        else if (pct <= 55 && state.shieldPhase === 1) triggerShield(2, 55);
+        else if (pct <= 20 && state.shieldPhase === 2) triggerShield(3, 20);
         else if (state.currentHp <= 0 && state.shieldPhase === 3) {
             state.isGameOver = true;
             state.finalReward = Math.floor(Math.random() * (state.maxReward - state.minReward + 1) + state.minReward);
@@ -321,8 +329,14 @@
     window.resolveShield = (isSuccess) => {
         state.activeShield = false;
         if (isSuccess) {
-            state.critBuff = true; state.logs.push(`<details class="log-entry"><summary><span class="log-shield-success">✅ [미션 성공] 방어막 해제!</span><span class="log-shield-buff">➔ 다음 타격 크리티컬 확률 5배 (50%) 버프 적용!</span></summary></details>`);
-            if(state.shieldPhase === 3 && state.currentHp <= 0) checkState();
+            // 🔥 성공 시 즉시 체력 10% 차감 로직
+            let damage = Math.floor(state.maxHp * 0.10);
+            state.currentHp -= damage;
+            if(state.currentHp < 0) state.currentHp = 0;
+            
+            state.logs.push(`<details class="log-entry" open><summary><span class="log-shield-success">✅ [미션 성공] 방어막 해제!</span><span class="log-shield-buff" style="color:var(--pubg-yellow);">➔ 보상: 금고 체력 10% (${damage.toLocaleString()}) 즉시 타격!!</span></summary></details>`);
+            
+            if(state.currentHp <= 0) checkState();
         } else {
             let heal = Math.floor(state.maxHp * 0.05); state.currentHp += heal; if(state.currentHp > state.maxHp) state.currentHp = state.maxHp;
             state.logs.push(`<details class="log-entry"><summary><span class="log-shield-fail">❌ [미션 실패] 방어막 해제 실패</span><span class="log-shield-buff">➔ 페널티: 체력 5% (${heal.toLocaleString()}) 회복</span></summary></details>`);
